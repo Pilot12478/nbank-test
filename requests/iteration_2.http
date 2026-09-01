@@ -37,7 +37,7 @@ Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
   "balance": 5000
 }
 
-### Проверка успешного пополнения аккаунта пользователем на сумму 0
+### Проверка успешного пополнения аккаунта пользователем на сумму 0,01
 
 POST http://localhost:4111/api/v1/accounts/deposit
 Content-Type: application/json
@@ -45,7 +45,19 @@ Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
 
 
 {
-  "id": 1,
+  "id": 0.01,
+  "balance": 0
+}
+
+### Проверка успешного пополнения аккаунта пользователем на сумму 4999.99
+
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+{
+  "id":4999.99,
   "balance": 0
 }
 
@@ -58,7 +70,7 @@ Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
 
 {
   "id": 1,
-  "balance": 5001
+  "balance": 5000.01
 }
 
 ### Негативный кейс: проверка сценария с отрицательной суммой
@@ -112,7 +124,7 @@ Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
   "amount":10000
 }
 
-### Проверка перевода 0
+### Проверка успешного перевода суммы 0,01
 
 POST http://localhost:4111/api/v1/accounts/transfer
 Content-Type: application/json
@@ -123,7 +135,21 @@ Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
 {
   "senderAccountId": 1,
   "receiverAccountId": 2,
-  "amount":0
+  "amount":0.01
+}
+
+### Проверка успешного перевода суммы 9999.99
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount":9999.99
 }
 
 ### Проверка перевода денег пользователем на сторонний существующий аккаунт
@@ -182,6 +208,20 @@ Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
   "senderAccountId": 1,
   "receiverAccountId": 2,
   "amount":4000
+}
+
+### Негативный тест: проверка перевода суммы которая превышает лимит 10000.01
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount":10000.01
 }
 
 ### Негативный тест: сумма перевода отрицательная
