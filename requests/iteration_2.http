@@ -1,0 +1,264 @@
+
+### Получение токена пользователем
+POST http://localhost:4111/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "igor",
+  "password": "verysTRongPassword33$"
+}
+
+### Получение аккаунта пользователем
+GET http://localhost:4111/api/v1/customer/accounts
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+### Проверка успешного пополнения аккаунта пользователем
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+{
+  "id": 1,
+  "balance": 100
+}
+
+### Проверка успешного пополнения аккаунта пользователем на максимальную сумму 5000
+
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+{
+  "id": 1,
+  "balance": 5000
+}
+
+### Проверка успешного пополнения аккаунта пользователем на сумму 0,01
+
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+{
+  "id": 0.01,
+  "balance": 0
+}
+
+### Проверка успешного пополнения аккаунта пользователем на сумму 4999.99
+
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+{
+  "id":4999.99,
+  "balance": 0
+}
+
+### Негативный кейс: проверка отсутствия возможности пополнения аккаунта на сумму более 5000
+
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+{
+  "id": 1,
+  "balance": 5000.01
+}
+
+### Негативный кейс: проверка сценария с отрицательной суммой
+
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+{
+  "id": 1,
+  "balance": -500
+}
+
+### Негативный кейс: проверка отсутствия возможности пополнить аккаунт, которого нет у пользователя
+
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+{
+  "id": 100,
+  "balance": 200
+}
+
+
+### Проверка успешного перевода денег пользоавателем самому себе
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount": 50
+}
+
+### Проверка перевода максимально возможной суммы денег пользователем
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount":10000
+}
+
+### Проверка успешного перевода суммы 0,01
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount":0.01
+}
+
+### Проверка успешного перевода суммы 9999.99
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount":9999.99
+}
+
+### Проверка перевода денег пользователем на сторонний существующий аккаунт
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 6,
+  "amount":500
+}
+
+
+### Проверка перевода денег пользователем на сторонний несуществующий аккаунт
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 6,
+  "amount":500
+}
+
+### Проверка перевода денег пользователем с несуществующего аккаунта
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 666,
+  "receiverAccountId": 6,
+  "amount":500
+}
+
+
+### Негативный тест: проверка перевода суммы которая превышает баланс отправителя
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount":4000
+}
+
+### Негативный тест: проверка перевода суммы которая превышает лимит 10000.01
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount":10000.01
+}
+
+### Негативный тест: сумма перевода отрицательная
+
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount": -4000
+}
+
+
+### Проверка успешной смены имени
+
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "name": "John Duck"
+}
+
+### Негативный сценария: указано только одно слово
+
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+Authorization: Basic aWdvcjp2ZXJ5c1RSb25nUGFzc3dvcmQzMyQ=
+
+
+
+{
+  "name": "John"
+}
