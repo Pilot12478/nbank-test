@@ -59,6 +59,7 @@ public class RoleTest {
                 .then()
                 .statusCode(HttpStatus.SC_OK)
                 .body("name", Matchers.equalTo(VALID_USER_NAME));
+
     }
 
     @Test
@@ -77,6 +78,15 @@ public class RoleTest {
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Name must contain two words with letters only"));
+
+        given()
+                .header("Authorization", userAuthToken)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("name", Matchers.nullValue());
 
     }
 }
