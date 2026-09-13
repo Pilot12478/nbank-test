@@ -19,11 +19,7 @@ public class RoleTest {
     private static final String VALID_USER_NAME = "John Duck";
     private static final String INVALID_USER_NAME = "John";
 
-    @BeforeAll
-    public static void setUp() {
-        logConfig();
 
-    }
 
     @BeforeEach
     public void preconditionForSuccessTest() {
