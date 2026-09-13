@@ -6,21 +6,15 @@ import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.ResponseSpecification;
 import models.*;
-import requests.CreateAccountRequester;
-import requests.CreateUserRequester;
-import requests.DepositRequester;
-import requests.GetUserProfileRequester;
+import requests.*;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
 import java.util.List;
 
-import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HelperForIteration2 {
     public static final String BASE_URL = "http://localhost:4111";
-    public static final String ADMIN_TOKEN = "Basic YWRtaW46YWRtaW4=";
 
     public static String createUser(String userName, String password, String role) {
         return new CreateUserRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.created())
@@ -57,14 +51,17 @@ public class HelperForIteration2 {
     public static ValidatableResponse getUserAccount(String userName, String password){
         return new GetUserProfileRequester(
                 RequestSpecs.userAuthReq(userName, password), ResponseSpecs.ok())
-                .send();
+                .send(null);
     }
 
-    public static void logConfig() {
-        RestAssured.filters(
-                List.of(new RequestLoggingFilter(),
-                        new ResponseLoggingFilter())
-        );
 
+    public static ValidatableResponse createTransfer(String userName, String password,double sum, int senderAccountId, int receiverAccountId,ResponseSpecification responseSpecification){
+        return new CreateTransferRequester(RequestSpecs.userAuthReq(userName,password),responseSpecification)
+                .send(CreateTransferModelRequest
+                        .builder()
+                        .amount(sum)
+                        .senderAccountId(senderAccountId)
+                        .receiverAccountId(receiverAccountId)
+                        .build());
     }
 }

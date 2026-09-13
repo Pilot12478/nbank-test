@@ -1,22 +1,15 @@
 package iteration2;
 
-import io.restassured.http.ContentType;
-import io.restassured.response.ValidatableResponse;
-import models.DepositModelRequest;
+
 import models.DepositModelResponse;
 import models.UserModelResponseProfile;
-import org.apache.http.HttpStatus;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
+import models.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.DepositRequester;
-import requests.GetUserProfileRequester;
-import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
@@ -24,15 +17,13 @@ import java.util.stream.Stream;
 import static Utils.HelperForIteration2.*;
 import static Utils.TestDataGenerator.generateUserName;
 import static Utils.TestDataGenerator.getDefaultPassword;
-import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 public class DepositTest {
-    private static int accountId;
-    private static String userAuthToken;
-    private static String username;
-    private static String password;
+    private int accountId;
+    private String username;
+    private String password;
     private static final int MAX_DEPOSIT_SUM = 5000;
     private static final double MIN_DEPOSIT_SUM = 0.01;
     private static final double STANDARD_SUM = 4999.99;
@@ -60,18 +51,13 @@ public class DepositTest {
         );
     }
 
-    @BeforeAll
-    public static void setUp() {
-        logConfig();
-
-    }
 
     @BeforeEach
     public void preconditionForSuccessTest() {
         username = generateUserName();
         password = getDefaultPassword();
-        String role = "USER";
-        userAuthToken = createUser(username, password, role);
+        String role = UserRole.USER.toString();
+        createUser(username, password, role);
         accountId = createAccount(username, password);
 
     }
@@ -82,11 +68,11 @@ public class DepositTest {
     public void verifyTopUpSuccess(double value, double expectedBalance) {
         DepositModelResponse depositModelResponse = depositAccount(username, password, accountId, value, ResponseSpecs.ok())
                 .extract().as(DepositModelResponse.class);
-        assertEquals(depositModelResponse.getBalance(), expectedBalance);
+        assertEquals(expectedBalance, depositModelResponse.getBalance(), 0.001);
 
         UserModelResponseProfile userModelResponseProfile = getUserAccount(username, password)
                 .extract().as(UserModelResponseProfile.class);
-        assertEquals(expectedBalance,userModelResponseProfile.getAccounts().getFirst().getBalance());
+        assertEquals(expectedBalance, userModelResponseProfile.getAccounts().get(0).getBalance());
     }
 
 
@@ -97,11 +83,11 @@ public class DepositTest {
         String actualErrorMessage = depositAccount(username, password, accountId, value, ResponseSpecs.badRequest())
                 .extract()
                 .asString();
-        assertEquals(actualErrorMessage, expectedErrorText);
+        assertEquals(expectedErrorText, actualErrorMessage);
 
         UserModelResponseProfile userModelResponseProfile = getUserAccount(username, password)
                 .extract().as(UserModelResponseProfile.class);
-        assertEquals(userModelResponseProfile.getAccounts().get(0).getBalance(), INITIAL_BALANCE);
+        assertEquals(INITIAL_BALANCE, userModelResponseProfile.getAccounts().get(0).getBalance(), 0.001);
 
 
     }
@@ -109,23 +95,15 @@ public class DepositTest {
     @Test
     @DisplayName("Проверка отсутствия возможности пополнить аккаунт пользователя, которого не существует")
     public void shouldNotAllowDepositAccountThatNotExist() {
-        String actualErrorMessage = new DepositRequester(RequestSpecs.userAuthReq(username, password)
-                , ResponseSpecs.forbidden())
-                .send(DepositModelRequest
-                        .builder()
-                        .id(INVALID_ACCOUNT)
-                        .balance(MIN_DEPOSIT_SUM)
-                        .build())
+        String actualErrorMessage = depositAccount(username, password, INVALID_ACCOUNT, MIN_DEPOSIT_SUM, ResponseSpecs.forbidden())
                 .extract()
                 .asString();
-        assertEquals(actualErrorMessage, "Unauthorized access to account");
+        assertEquals("Unauthorized access to account", actualErrorMessage);
 
-        UserModelResponseProfile userModelResponseProfile = new GetUserProfileRequester(
-                RequestSpecs.userAuthReq(username, password), ResponseSpecs.ok())
-                .send()
-                .extract()
-                .as(UserModelResponseProfile.class);
-        assertEquals(INITIAL_BALANCE, userModelResponseProfile.getAccounts().get(0).getBalance());
+
+        UserModelResponseProfile userModelResponseProfile = getUserAccount(username, password)
+                .extract().as(UserModelResponseProfile.class);
+        assertEquals(INITIAL_BALANCE, userModelResponseProfile.getAccounts().get(0).getBalance(), 0.001);
 
     }
 

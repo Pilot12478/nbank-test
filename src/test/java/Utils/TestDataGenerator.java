@@ -1,13 +1,17 @@
 package Utils;
 
-import java.util.concurrent.ThreadLocalRandom;
+import org.apache.commons.lang3.RandomStringUtils;
+
 
 public class TestDataGenerator {
     public static String generateUserName(){
-        return "User_"+ThreadLocalRandom.current().nextInt(1,999);
+        return RandomStringUtils.randomAlphabetic(10);
     }
 
     public static String getDefaultPassword() {
-        return "StrongP@ssw0rd123!";
+        return RandomStringUtils.randomAlphabetic(3).toLowerCase()+
+                RandomStringUtils.randomAlphabetic(3).toUpperCase()+
+                RandomStringUtils.randomNumeric(3)+
+                "@*";
     }
 }

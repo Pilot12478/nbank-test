@@ -4,23 +4,23 @@ import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
-import models.BaseModel;
-import models.DepositModelRequest;
+import models.CreateTransferModelRequest;
+import org.apache.http.HttpStatus;
 
 import static io.restassured.RestAssured.given;
 
-public class DepositRequester extends Request<DepositModelRequest> {
-    public DepositRequester(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
+public class CreateTransferRequester extends Request<CreateTransferModelRequest> {
+    public CreateTransferRequester(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
         super(requestSpecification, responseSpecification);
     }
 
-    public ValidatableResponse send(DepositModelRequest body) {
-        return given()
+    @Override
+    public ValidatableResponse send(CreateTransferModelRequest body) {
+        return  given()
                 .spec(requestSpecification)
                 .body(body)
-                .post("/api/v1/accounts/deposit")
+                .post("/api/v1/accounts/transfer")
                 .then()
                 .spec(responseSpecification);
     }
-
 }

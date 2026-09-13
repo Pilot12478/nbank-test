@@ -8,13 +8,13 @@ import org.apache.http.HttpStatus;
 
 import static io.restassured.RestAssured.given;
 
-public class CreateAccountRequester extends Request implements PostRequest {
+public class CreateAccountRequester extends Request<Void> {
     public CreateAccountRequester(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
         super(requestSpecification, responseSpecification);
     }
 
-    @Override
-    public ValidatableResponse send(BaseModel baseModel) {
+
+    public ValidatableResponse send(Void body) {
         return given()
                 .spec(requestSpecification)
                 .post("/api/v1/accounts")

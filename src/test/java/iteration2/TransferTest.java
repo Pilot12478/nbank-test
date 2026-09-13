@@ -1,6 +1,8 @@
 package iteration2;
 
 import io.restassured.http.ContentType;
+import models.CreateTransferModelResponse;
+import models.UserRole;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,13 +20,16 @@ import static Utils.HelperForIteration2.*;
 import static Utils.TestDataGenerator.generateUserName;
 import static Utils.TestDataGenerator.getDefaultPassword;
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TransferTest {
-    private static String userAuthToken;
-    private static String alienUserAuthToken;
-    private static int senderAccountId;
-    private static int receiverAccountId;
-    private static int alienAccountId;
+    private String userAuthToken;
+    private String alienUserAuthToken;
+    private String userName;
+    private String password;
+    private int senderAccountId;
+    private int receiverAccountId;
+    private int alienAccountId;
     private static final int DEPOSIT_SUM = 5000;
     private static final int MAX_TRANSFER_SUM = 10000;
     private static final double MIN_TRANSFER_SUM = 0.01;
@@ -35,21 +40,16 @@ public class TransferTest {
     private static final int ACCOUNT_THAT_NOT_EXIST = 34434;
 
 
-    @BeforeAll
-    public static void setUp() {
-        logConfig();
-    }
-
     @BeforeEach
     public void preconditionForSuccessTest() {
-        String userName = generateUserName();
-        String password = getDefaultPassword();
-        String role = "USER";
+        userName = generateUserName();
+        password = getDefaultPassword();
+        String role = UserRole.USER.toString();
         userAuthToken = createUser(userName, password, role);
-        senderAccountId = createAccount(userName,password);
-        receiverAccountId = createAccount(userName,password);
-        depositAccount(userName,password, senderAccountId, DEPOSIT_SUM, ResponseSpecs.created());
-        depositAccount(userName, password,senderAccountId, DEPOSIT_SUM,ResponseSpecs.created());
+        senderAccountId = createAccount(userName, password);
+        receiverAccountId = createAccount(userName, password);
+        depositAccount(userName, password, senderAccountId, DEPOSIT_SUM, ResponseSpecs.ok());
+        depositAccount(userName, password, senderAccountId, DEPOSIT_SUM, ResponseSpecs.ok());
     }
 
     public void preconditionForTransferToAlienAccount() {
@@ -57,7 +57,7 @@ public class TransferTest {
         String password = getDefaultPassword();
         String role = "USER";
         alienUserAuthToken = createUser(userName, password, role);
-        alienAccountId = createAccount(userName,password);
+        alienAccountId = createAccount(userName, password);
     }
 
     public static Stream<Arguments> testDataForSuccessTest() {
@@ -82,24 +82,13 @@ public class TransferTest {
     @MethodSource("testDataForSuccessTest")
     @DisplayName("Проверка успешного перевода денежных средств между своими счетами")
     public void checkMeToMeSuccessTransfer(double value, double expectedTransfer) {
-        given()
-                .header("Authorization", userAuthToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(String.format("""
-                        {
-                          "senderAccountId": %d,
-                          "receiverAccountId": %d,
-                          "amount": %s
-                        }
-                        """, senderAccountId, receiverAccountId, value))
-                .post(BASE_URL + "/api/v1/accounts/transfer")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("amount", Matchers.is((float) expectedTransfer))
-                .body("receiverAccountId", Matchers.equalTo(receiverAccountId))
-                .body("senderAccountId", Matchers.equalTo(senderAccountId))
-                .body("message", Matchers.equalTo("Transfer successful"));
+        CreateTransferModelResponse response = createTransfer(userName, password, value, receiverAccountId, senderAccountId, ResponseSpecs.ok())
+                .extract().as(CreateTransferModelResponse.class);
+        assertEquals(expectedTransfer, response.getAmount());
+        assertEquals(receiverAccountId, response.getReceiverAccountId());
+        assertEquals(senderAccountId, response.getSenderAccountId());
+        assertEquals("Transfer successful", response.getMessage());
+
 
         given()
                 .header("Authorization", userAuthToken)
@@ -240,6 +229,7 @@ public class TransferTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Invalid transfer: insufficient funds or invalid accounts"));
     }
+
     @Test
     @DisplayName("Проверка отсутствия возможности перевода со счета на счет если счет один и тот же")
     public void shouldNotAllowTransferIfSenderAndReceiverAccountSame() {

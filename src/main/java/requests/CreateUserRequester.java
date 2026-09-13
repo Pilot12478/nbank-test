@@ -5,22 +5,24 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 import models.BaseModel;
+import models.CreateUserModelRequest;
 import org.apache.http.HttpStatus;
 
 import static io.restassured.RestAssured.given;
 
-public class CreateUserRequester extends Request implements PostRequest{
+public class CreateUserRequester extends Request<CreateUserModelRequest> {
     public CreateUserRequester(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
         super(requestSpecification, responseSpecification);
     }
 
-    @Override
-    public ValidatableResponse send(BaseModel baseModel) {
+    public ValidatableResponse send(CreateUserModelRequest body) {
         return given()
                 .spec(requestSpecification)
-                .body(baseModel)
+                .body(body)
                 .post("/api/v1/admin/users")
                 .then()
                 .spec(responseSpecification);
     }
+
+
 }

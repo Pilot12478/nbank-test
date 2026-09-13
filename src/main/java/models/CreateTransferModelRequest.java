@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class LoginUserModelResponse {
-    private String role;
-    private String userName;
+public class CreateTransferModelRequest {
+    private int senderAccountId;
+    private int receiverAccountId;
+    private double amount;
 }
