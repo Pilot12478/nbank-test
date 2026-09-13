@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
@@ -45,10 +46,10 @@ public class TransferTest {
         String password = getDefaultPassword();
         String role = "USER";
         userAuthToken = createUser(userName, password, role);
-        senderAccountId = createAccount(userAuthToken);
-        receiverAccountId = createAccount(userAuthToken);
-        depositAccount(userAuthToken, senderAccountId, DEPOSIT_SUM);
-        depositAccount(userAuthToken, senderAccountId, DEPOSIT_SUM);
+        senderAccountId = createAccount(userName,password);
+        receiverAccountId = createAccount(userName,password);
+        depositAccount(userName,password, senderAccountId, DEPOSIT_SUM, ResponseSpecs.created());
+        depositAccount(userName, password,senderAccountId, DEPOSIT_SUM,ResponseSpecs.created());
     }
 
     public void preconditionForTransferToAlienAccount() {
@@ -56,7 +57,7 @@ public class TransferTest {
         String password = getDefaultPassword();
         String role = "USER";
         alienUserAuthToken = createUser(userName, password, role);
-        alienAccountId = createAccount(alienUserAuthToken);
+        alienAccountId = createAccount(userName,password);
     }
 
     public static Stream<Arguments> testDataForSuccessTest() {
