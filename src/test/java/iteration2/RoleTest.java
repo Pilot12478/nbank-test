@@ -11,7 +11,7 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class RoleTest {
+public class RoleTest extends BaseTest {
     private static final String VALID_USER_NAME = "John Duck";
     private static final String INVALID_USER_NAME = "John";
     private AccountInfo accountInfo;
@@ -31,12 +31,10 @@ public class RoleTest {
     public void successChangeNameTest() {
         UpdateUserNameModelResponse userModelResponse = updateUserName(accountInfo, VALID_USER_NAME, ResponseSpecs.ok())
                 .extract().as(UpdateUserNameModelResponse.class);
-        assertEquals(VALID_USER_NAME, userModelResponse.getCustomer().getName());
-
         UserModelResponseProfile userProfileResponse = getUserAccount(accountInfo)
                 .extract().as(UserModelResponseProfile.class);
-
-        assertEquals(VALID_USER_NAME, userProfileResponse.getName());
+        softly.assertThat(VALID_USER_NAME).isEqualTo(userModelResponse.getCustomer().getName());
+        softly.assertThat(VALID_USER_NAME).isEqualTo(userProfileResponse.getName());
 
     }
 
@@ -47,12 +45,11 @@ public class RoleTest {
         String actualMessage = updateUserName(accountInfo, INVALID_USER_NAME, ResponseSpecs.badRequest())
                 .extract().asString();
 
-        assertEquals(INVALID_NAME_MSG, actualMessage);
         UserModelResponseProfile userProfileResponse = getUserAccount(accountInfo)
                 .extract().as(UserModelResponseProfile.class);
 
-        assertNull(userProfileResponse.getName());
-
+        softly.assertThat(INVALID_NAME_MSG).isEqualTo(actualMessage);
+        softly.assertThat(userProfileResponse.getName()).isNull();
 
     }
 }

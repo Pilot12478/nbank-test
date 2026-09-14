@@ -16,9 +16,10 @@ import java.util.stream.Stream;
 import static Utils.HelperForIteration2.*;
 import static Utils.HelperForIteration2.deleteUser;
 import static Utils.HelperForIteration2.getAccountBalance;
+import static org.assertj.core.api.Assertions.offset;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TransferTest {
+public class TransferTest extends BaseTest {
     private AccountInfo senderAccountInfo;
     private static final int DEPOSIT_SUM = 5000;
     private static final int MAX_TRANSFER_SUM = 10000;
@@ -77,13 +78,13 @@ public class TransferTest {
         CreateTransferModelResponse response = createTransfer(senderAccountInfo, value, receiverAccountId, ResponseSpecs.ok())
                 .extract().as(CreateTransferModelResponse.class);
 
-        assertEquals(value, response.getAmount());
-        assertEquals(receiverAccountId, response.getReceiverAccountId());
-        assertEquals(senderAccountId, response.getSenderAccountId());
-        assertEquals(MSG_TRANSFER_SUCCESS, response.getMessage());
+        softly.assertThat(value).isEqualTo(response.getAmount());
+        softly.assertThat(receiverAccountId).isEqualTo( response.getReceiverAccountId());
+        softly.assertThat(senderAccountId).isEqualTo(response.getSenderAccountId());
+        softly.assertThat(MSG_TRANSFER_SUCCESS).isEqualTo(response.getMessage());
 
-        assertEquals(expectedSenderBalance, getAccountBalance(senderAccountInfo, senderAccountId), 0.001);
-        assertEquals(expectedReceiverBalance, getAccountBalance(senderAccountInfo, receiverAccountId), 0.001);
+        softly.assertThat(expectedSenderBalance).isCloseTo(getAccountBalance(senderAccountInfo,senderAccountId),offset(0.001));
+        softly.assertThat(expectedReceiverBalance).isCloseTo(getAccountBalance(senderAccountInfo,receiverAccountId),offset(0.001));
 
     }
 
@@ -119,14 +120,13 @@ public class TransferTest {
         int receiverAccountId = receiverAccountInfo.getAccountId();
         CreateTransferModelResponse response = createTransfer(senderAccountInfo, MIN_TRANSFER_SUM, receiverAccountId, ResponseSpecs.ok())
                 .extract().as(CreateTransferModelResponse.class);
-        assertEquals(MIN_TRANSFER_SUM, response.getAmount());
-        assertEquals(receiverAccountId, response.getReceiverAccountId());
-        assertEquals(senderAccountId, response.getSenderAccountId());
-        assertEquals(MSG_TRANSFER_SUCCESS, response.getMessage());
 
-
-        assertEquals(STANDART_TRANSFER_SUM, getAccountBalance(senderAccountInfo), 0.001);
-        assertEquals(MIN_TRANSFER_SUM, getAccountBalance(receiverAccountInfo), 0.001);
+        softly.assertThat(MIN_TRANSFER_SUM).isEqualTo(response.getAmount());
+        softly.assertThat(receiverAccountId).isEqualTo( response.getReceiverAccountId());
+        softly.assertThat(senderAccountId).isEqualTo(response.getSenderAccountId());
+        softly.assertThat(MSG_TRANSFER_SUCCESS).isEqualTo(response.getMessage());
+        softly.assertThat(STANDART_TRANSFER_SUM).isCloseTo(getAccountBalance(senderAccountInfo),offset(0.001));
+        softly.assertThat(MIN_TRANSFER_SUM).isCloseTo(getAccountBalance(receiverAccountInfo),offset(0.001));
         deleteUser(receiverAccountInfo);
 
     }

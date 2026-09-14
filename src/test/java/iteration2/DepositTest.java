@@ -2,6 +2,7 @@ package iteration2;
 
 
 import Utils.AccountInfo;
+import models.BaseModel;
 import models.DepositModelResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,10 +16,11 @@ import specs.ResponseSpecs;
 import java.util.stream.Stream;
 
 import static Utils.HelperForIteration2.*;
+import static org.assertj.core.api.Assertions.offset;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class DepositTest {
+public class DepositTest extends BaseTest {
     private AccountInfo accountInfo;
     private static final int MAX_DEPOSIT_SUM = 5000;
     private static final double MIN_DEPOSIT_SUM = 0.01;
@@ -66,8 +68,9 @@ public class DepositTest {
     public void verifyTopUpSuccess(double value, double expectedBalance) {
         DepositModelResponse depositModelResponse = depositAccount(accountInfo, value, ResponseSpecs.ok())
                 .extract().as(DepositModelResponse.class);
-        assertEquals(expectedBalance, depositModelResponse.getBalance(), 0.001);
-        assertEquals(expectedBalance, getAccountBalance(accountInfo));
+        softly.assertThat(expectedBalance).isCloseTo(depositModelResponse.getBalance(),offset(0.001));
+        softly.assertThat(expectedBalance).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
+
 
     }
 
@@ -79,8 +82,8 @@ public class DepositTest {
         String actualErrorMessage = depositAccount(accountInfo, value, ResponseSpecs.badRequest())
                 .extract()
                 .asString();
-        assertEquals(expectedErrorText, actualErrorMessage);
-        assertEquals(INITIAL_BALANCE, getAccountBalance(accountInfo), 0.001);
+        softly.assertThat(expectedErrorText).isEqualTo(actualErrorMessage);
+        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
 
 
     }
@@ -91,8 +94,9 @@ public class DepositTest {
         String actualErrorMessage = depositAccount(accountInfo.getUsername(), accountInfo.getPassword(), INVALID_ACCOUNT, MIN_DEPOSIT_SUM, ResponseSpecs.forbidden())
                 .extract()
                 .asString();
-        assertEquals(UNAUTHORIZED_ACCESS, actualErrorMessage);
-        assertEquals(INITIAL_BALANCE, getAccountBalance(accountInfo), 0.001);
+        softly.assertThat(UNAUTHORIZED_ACCESS).isEqualTo(actualErrorMessage);
+        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
+
 
     }
 
