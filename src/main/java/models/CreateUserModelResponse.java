@@ -1,14 +1,21 @@
 package models;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountInfo {
+@Builder
+public class CreateUserModelResponse {
+    private int id;
     private String username;
     private String password;
-    private int accountId;
+    private String name;
+    private String role;
+    private List<AccountDto> accounts;
 }

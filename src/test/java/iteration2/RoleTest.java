@@ -1,23 +1,13 @@
 package iteration2;
 
-import io.restassured.http.ContentType;
+import Utils.AccountInfo;
 import models.*;
-import org.apache.http.HttpStatus;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import requests.UpdateUserNameRequester;
-import specs.RequestSpecs;
+import org.junit.jupiter.api.*;
 import specs.ResponseSpecs;
 
 
 import static Utils.HelperForIteration2.*;
-import static Utils.TestDataGenerator.generateUserName;
-import static Utils.TestDataGenerator.getDefaultPassword;
 import static io.restassured.RestAssured.given;
-import static io.restassured.RestAssured.responseSpecification;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -25,13 +15,17 @@ public class RoleTest {
     private static final String VALID_USER_NAME = "John Duck";
     private static final String INVALID_USER_NAME = "John";
     private AccountInfo accountInfo;
+    private static final String INVALID_NAME_MSG = "Name must contain two words with letters only";
 
 
     @BeforeEach
     public void preconditionForSuccessTest() {
         accountInfo = createUserAndAccount();
     }
-
+    @AfterEach
+    public void deleteUserAccount() {
+        deleteUser(accountInfo);
+    }
     @Test
     @DisplayName("Проверка успешной смены имени")
     public void successChangeNameTest() {
@@ -53,7 +47,7 @@ public class RoleTest {
         String actualMessage = updateUserName(accountInfo, INVALID_USER_NAME, ResponseSpecs.badRequest())
                 .extract().asString();
 
-        assertEquals("Name must contain two words with letters only", actualMessage);
+        assertEquals(INVALID_NAME_MSG, actualMessage);
         UserModelResponseProfile userProfileResponse = getUserAccount(accountInfo)
                 .extract().as(UserModelResponseProfile.class);
 

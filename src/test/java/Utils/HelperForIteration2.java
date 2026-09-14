@@ -12,17 +12,14 @@ import static Utils.TestDataGenerator.getDefaultPassword;
 
 
 public class HelperForIteration2 {
-    public static final String BASE_URL = "http://localhost:4111";
 
-    public static String createUser(String userName, String password, String role) {
+    public static ValidatableResponse createUser(String userName, String password, String role) {
         return new CreateUserRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.created())
                 .send(CreateUserModelRequest.builder()
                         .username(userName)
                         .password(password)
                         .role(role)
-                        .build())
-                .extract()
-                .header("Authorization");
+                        .build());
 
     }
 
@@ -38,9 +35,10 @@ public class HelperForIteration2 {
         String username = generateUserName();
         String password = getDefaultPassword();
         String role = UserRole.USER.toString();
-        createUser(username, password, role);
+        CreateUserModelResponse response = createUser(username, password, role).extract().as(CreateUserModelResponse.class);
+        int id = response.getId();
         int accountId = createAccount(username, password);
-        return new AccountInfo(username, password, accountId);
+        return new AccountInfo(username, password, accountId, id);
     }
 
     public static ValidatableResponse depositAccount(AccountInfo info, double sum, ResponseSpecification responseSpecification) {
@@ -55,6 +53,7 @@ public class HelperForIteration2 {
 
 
     }
+
     public static ValidatableResponse depositAccount(String username, String password, int accountId, double sum, ResponseSpecification responseSpecification) {
         return new DepositRequester(RequestSpecs.userAuthReq(username, password), responseSpecification)
                 .send(DepositModelRequest
@@ -65,11 +64,10 @@ public class HelperForIteration2 {
     }
 
 
-
     public static ValidatableResponse getUserAccount(AccountInfo info) {
         return new GetUserProfileRequester(
                 RequestSpecs.userAuthReq(info.getUsername(), info.getPassword()), ResponseSpecs.ok())
-                .send(null);
+                .send();
     }
 
 
@@ -82,6 +80,7 @@ public class HelperForIteration2 {
                         .receiverAccountId(receiverAccountId)
                         .build());
     }
+
     public static double getAccountBalance(AccountInfo info) {
         return getUserAccount(info)
                 .extract().as(UserModelResponseProfile.class)
@@ -91,6 +90,7 @@ public class HelperForIteration2 {
                 .orElseThrow(() -> new AssertionError("Account not found: " + info.getAccountId()))
                 .getBalance();
     }
+
     public static double getAccountBalance(AccountInfo info, int accountId) {
         return getUserAccount(info)
                 .extract().as(UserModelResponseProfile.class)
@@ -100,7 +100,8 @@ public class HelperForIteration2 {
                 .orElseThrow(() -> new AssertionError("Account not found: " + accountId))
                 .getBalance();
     }
-    public static ValidatableResponse updateUserName(AccountInfo accountInfo,String name, ResponseSpecification responseSpecification){
+
+    public static ValidatableResponse updateUserName(AccountInfo accountInfo, String name, ResponseSpecification responseSpecification) {
         return new UpdateUserNameRequester(RequestSpecs.userAuthReq(
                 accountInfo.getUsername(), accountInfo.getPassword()), responseSpecification)
                 .send(UpdateUserNameModelRequest
@@ -108,4 +109,9 @@ public class HelperForIteration2 {
                         .name(name)
                         .build());
     }
+
+    public static void deleteUser(AccountInfo accountInfo) {
+        new DeleteUserRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.ok(), accountInfo.getUserId()).send();
+    }
+
 }

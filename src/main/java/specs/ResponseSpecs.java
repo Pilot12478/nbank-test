@@ -28,5 +28,10 @@ public class ResponseSpecs {
                 .expectStatusCode(HttpStatus.SC_FORBIDDEN)
                 .build();
     }
+    public static ResponseSpecification noContent(){
+        return new ResponseSpecBuilder()
+                .expectStatusCode(HttpStatus.SC_NO_CONTENT)
+                .build();
+    }
 
 }

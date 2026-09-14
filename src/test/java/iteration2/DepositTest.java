@@ -1,9 +1,9 @@
 package iteration2;
 
 
-import models.AccountInfo;
+import Utils.AccountInfo;
 import models.DepositModelResponse;
-import models.UserModelResponseProfile;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,6 +53,11 @@ public class DepositTest {
     public void preconditionForSuccessTest() {
         accountInfo = createUserAndAccount();
 
+    }
+
+    @AfterEach
+    public void deleteUserAccount() {
+        deleteUser(accountInfo);
     }
 
     @ParameterizedTest(name = "{0}")

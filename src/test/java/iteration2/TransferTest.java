@@ -1,7 +1,8 @@
 package iteration2;
 
-import models.AccountInfo;
+import Utils.AccountInfo;
 import models.CreateTransferModelResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,8 +14,8 @@ import specs.ResponseSpecs;
 import java.util.stream.Stream;
 
 import static Utils.HelperForIteration2.*;
+import static Utils.HelperForIteration2.deleteUser;
 import static Utils.HelperForIteration2.getAccountBalance;
-import static iteration2.DepositTest.INITIAL_BALANCE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TransferTest {
@@ -27,6 +28,7 @@ public class TransferTest {
     private static final double SUM_ABOVE_TRANSFER_LIMIT = 10000.01;
     private static final int NEGATIVE_TRANSFER_SUM = -333;
     private static final int ACCOUNT_THAT_NOT_EXIST = 34434;
+    public static final double INITIAL_BALANCE = 0.0;
 
     private static final String MSG_MIN_AMOUNT = "Transfer amount must be at least 0.01";
     private static final String MSG_EXCEEDS_LIMIT = "Transfer amount cannot exceed 10000";
@@ -39,6 +41,10 @@ public class TransferTest {
         senderAccountInfo = createUserAndAccount();
         depositAccount(senderAccountInfo, DEPOSIT_SUM, ResponseSpecs.ok());
         depositAccount(senderAccountInfo, DEPOSIT_SUM, ResponseSpecs.ok());
+    }
+    @AfterEach
+    public void deleteUserAccount() {
+        deleteUser(senderAccountInfo);
     }
 
 
@@ -72,13 +78,12 @@ public class TransferTest {
                 .extract().as(CreateTransferModelResponse.class);
 
         assertEquals(value, response.getAmount());
-        assertEquals(receiverAccountId, response.getReceiverAccountId(), 0.001);
+        assertEquals(receiverAccountId, response.getReceiverAccountId());
         assertEquals(senderAccountId, response.getSenderAccountId());
         assertEquals(MSG_TRANSFER_SUCCESS, response.getMessage());
 
         assertEquals(expectedSenderBalance, getAccountBalance(senderAccountInfo, senderAccountId), 0.001);
         assertEquals(expectedReceiverBalance, getAccountBalance(senderAccountInfo, receiverAccountId), 0.001);
-
 
     }
 
@@ -122,6 +127,7 @@ public class TransferTest {
 
         assertEquals(STANDART_TRANSFER_SUM, getAccountBalance(senderAccountInfo), 0.001);
         assertEquals(MIN_TRANSFER_SUM, getAccountBalance(receiverAccountInfo), 0.001);
+        deleteUser(receiverAccountInfo);
 
     }
 

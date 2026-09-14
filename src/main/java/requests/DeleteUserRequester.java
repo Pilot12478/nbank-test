@@ -4,20 +4,22 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 
+import static io.restassured.RestAssured.delete;
 import static io.restassured.RestAssured.given;
 
-public class GetUserProfileRequester extends RequestNoBody{
-    public GetUserProfileRequester(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
+public class DeleteUserRequester extends RequestNoBody{
+    private final int userId;
+    public DeleteUserRequester(RequestSpecification requestSpecification, ResponseSpecification responseSpecification, int userId) {
         super(requestSpecification, responseSpecification);
+        this.userId = userId;
     }
-
-
+    @Override
     public ValidatableResponse send() {
         return given()
                 .spec(requestSpecification)
-                .get("/api/v1/customer/profile")
+                .pathParam("id", userId)
+                .delete("/api/v1/admin/users/{id}")
                 .then()
                 .spec(responseSpecification);
-
     }
 }
