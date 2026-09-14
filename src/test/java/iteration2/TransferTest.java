@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TransferTest {
     private AccountInfo senderAccountInfo;
-    private AccountInfo receiverAccountInfo;
     private static final int DEPOSIT_SUM = 5000;
     private static final int MAX_TRANSFER_SUM = 10000;
     private static final double MIN_TRANSFER_SUM = 0.01;
@@ -42,10 +41,6 @@ public class TransferTest {
         depositAccount(senderAccountInfo, DEPOSIT_SUM, ResponseSpecs.ok());
     }
 
-    public void preconditionForTransferToAlienAccount() {
-        receiverAccountInfo = createUserAndAccount();
-
-    }
 
     public static Stream<Arguments> testDataForSuccessTest() {
         return Stream.of(
@@ -75,6 +70,7 @@ public class TransferTest {
 
         CreateTransferModelResponse response = createTransfer(senderAccountInfo, value, receiverAccountId, ResponseSpecs.ok())
                 .extract().as(CreateTransferModelResponse.class);
+
         assertEquals(value, response.getAmount());
         assertEquals(receiverAccountId, response.getReceiverAccountId(), 0.001);
         assertEquals(senderAccountId, response.getSenderAccountId());
@@ -113,7 +109,7 @@ public class TransferTest {
     @Test
     @DisplayName("Проверка успешного перевода денежных средств на сторонний аккаунт")
     public void checkTransferToAlienAccount() {
-        preconditionForTransferToAlienAccount();
+        AccountInfo receiverAccountInfo = createUserAndAccount();
         int senderAccountId = senderAccountInfo.getAccountId();
         int receiverAccountId = receiverAccountInfo.getAccountId();
         CreateTransferModelResponse response = createTransfer(senderAccountInfo, MIN_TRANSFER_SUM, receiverAccountId, ResponseSpecs.ok())

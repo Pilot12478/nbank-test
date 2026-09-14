@@ -59,7 +59,7 @@ public class HelperForIteration2 {
         return new DepositRequester(RequestSpecs.userAuthReq(username, password), responseSpecification)
                 .send(DepositModelRequest
                         .builder()
-                        .id(accountId) // <-- Теперь можно передать любой ID
+                        .id(accountId)
                         .balance(sum)
                         .build());
     }
@@ -99,5 +99,13 @@ public class HelperForIteration2 {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Account not found: " + accountId))
                 .getBalance();
+    }
+    public static ValidatableResponse updateUserName(AccountInfo accountInfo,String name, ResponseSpecification responseSpecification){
+        return new UpdateUserNameRequester(RequestSpecs.userAuthReq(
+                accountInfo.getUsername(), accountInfo.getPassword()), responseSpecification)
+                .send(UpdateUserNameModelRequest
+                        .builder()
+                        .name(name)
+                        .build());
     }
 }

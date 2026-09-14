@@ -1,78 +1,64 @@
 package iteration2;
 
 import io.restassured.http.ContentType;
+import models.*;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import requests.UpdateUserNameRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
 
 import static Utils.HelperForIteration2.*;
 import static Utils.TestDataGenerator.generateUserName;
 import static Utils.TestDataGenerator.getDefaultPassword;
 import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.responseSpecification;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class RoleTest {
-    private static String userAuthToken;
     private static final String VALID_USER_NAME = "John Duck";
     private static final String INVALID_USER_NAME = "John";
-
+    private AccountInfo accountInfo;
 
 
     @BeforeEach
     public void preconditionForSuccessTest() {
-        String username = generateUserName();
-        String password = getDefaultPassword();
-        String role = "USER";
-        userAuthToken = createUser(username, password, role);
-
+        accountInfo = createUserAndAccount();
     }
 
     @Test
     @DisplayName("Проверка успешной смены имени")
     public void successChangeNameTest() {
-        given()
-                .header("Authorization", userAuthToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(String.format("""
-                        {
-                          "name": "%s"
-                        }
-                        """, VALID_USER_NAME))
-                .put(BASE_URL + "/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("customer.name", Matchers.equalTo(VALID_USER_NAME));
+        UpdateUserNameModelResponse userModelResponse = updateUserName(accountInfo, VALID_USER_NAME, ResponseSpecs.ok())
+                .extract().as(UpdateUserNameModelResponse.class);
+        assertEquals(VALID_USER_NAME, userModelResponse.getCustomer().getName());
 
-        given()
-                .header("Authorization", userAuthToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .get(BASE_URL + "/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("name", Matchers.equalTo(VALID_USER_NAME));
+        UserModelResponseProfile userProfileResponse = getUserAccount(accountInfo)
+                .extract().as(UserModelResponseProfile.class);
+
+        assertEquals(VALID_USER_NAME, userProfileResponse.getName());
+
     }
 
     @Test
     @DisplayName("Проверка сценария с ошибкой при вводе имени одним словом")
     public void negativeChangeNameTest() {
-        given()
-                .header("Authorization", userAuthToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(String.format("""
-                        {
-                          "name": "%s"
-                        }
-                        """, INVALID_USER_NAME))
-                .put(BASE_URL + "/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Name must contain two words with letters only"));
+
+        String actualMessage = updateUserName(accountInfo, INVALID_USER_NAME, ResponseSpecs.badRequest())
+                .extract().asString();
+
+        assertEquals("Name must contain two words with letters only", actualMessage);
+        UserModelResponseProfile userProfileResponse = getUserAccount(accountInfo)
+                .extract().as(UserModelResponseProfile.class);
+
+        assertNull(userProfileResponse.getName());
+
 
     }
 }

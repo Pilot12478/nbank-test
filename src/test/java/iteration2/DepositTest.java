@@ -28,6 +28,7 @@ public class DepositTest {
     private static final int ZERO_SUM = 0;
     private static final int INVALID_ACCOUNT = 666;
     public static final double INITIAL_BALANCE = 0.0;
+    private static final String UNAUTHORIZED_ACCESS = "Unauthorized access to account";
 
     public static Stream<Arguments> testDataForSuccessTest() {
 
@@ -85,7 +86,7 @@ public class DepositTest {
         String actualErrorMessage = depositAccount(accountInfo.getUsername(), accountInfo.getPassword(), INVALID_ACCOUNT, MIN_DEPOSIT_SUM, ResponseSpecs.forbidden())
                 .extract()
                 .asString();
-        assertEquals("Unauthorized access to account", actualErrorMessage);
+        assertEquals(UNAUTHORIZED_ACCESS, actualErrorMessage);
         assertEquals(INITIAL_BALANCE, getAccountBalance(accountInfo), 0.001);
 
     }
