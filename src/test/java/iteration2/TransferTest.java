@@ -32,6 +32,9 @@ public class TransferTest {
     private static final double SUM_ABOVE_TRANSFER_LIMIT = 10000.01;
     private static final int NEGATIVE_TRANSFER_SUM = -333;
     private static final int ACCOUNT_THAT_NOT_EXIST = 34434;
+    private static final double MAX_BALANCE = 10000;
+    private static final double MIN_BALANCE = 0.01f;
+    private static final double STANDART_BALANCE = 9999.99f;
 
 
     @BeforeAll
@@ -61,18 +64,18 @@ public class TransferTest {
 
     public static Stream<Arguments> testDataForSuccessTest() {
         return Stream.of(
-                Arguments.of(MAX_TRANSFER_SUM, MAX_TRANSFER_SUM),
-                Arguments.of(MIN_TRANSFER_SUM, MIN_TRANSFER_SUM),
-                Arguments.of(STANDART_TRANSFER_SUM, STANDART_TRANSFER_SUM)
+                Arguments.of(MAX_TRANSFER_SUM, MAX_TRANSFER_SUM, 0.0f, 10000f),
+                Arguments.of(MIN_TRANSFER_SUM, MIN_TRANSFER_SUM, 9999.99f, 0.01f),
+                Arguments.of(STANDART_TRANSFER_SUM, STANDART_TRANSFER_SUM, 0.01f, 9999.99f)
 
         );
     }
 
     public static Stream<Arguments> testDataForNegativeTestWithInvalidSum() {
         return Stream.of(
-                Arguments.of(ZERO_TRANSFER_SUM, "Transfer amount must be at least 0.01"),
-                Arguments.of(NEGATIVE_TRANSFER_SUM, "Transfer amount must be at least 0.01"),
-                Arguments.of(SUM_ABOVE_TRANSFER_LIMIT, "Transfer amount cannot exceed 10000")
+                Arguments.of(ZERO_TRANSFER_SUM, "Transfer amount must be at least 0.01", 10000f,0.0f),
+                Arguments.of(NEGATIVE_TRANSFER_SUM, "Transfer amount must be at least 0.01", 10000f,0.0f),
+                Arguments.of(SUM_ABOVE_TRANSFER_LIMIT, "Transfer amount cannot exceed 10000", 10000f,0.0f)
         );
     }
 
@@ -80,7 +83,7 @@ public class TransferTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForSuccessTest")
     @DisplayName("Проверка успешного перевода денежных средств между своими счетами")
-    public void checkMeToMeSuccessTransfer(double value, double expectedTransfer) {
+    public void checkMeToMeSuccessTransfer(double value, double expectedTransfer, float expectedSenderBalance, float expectedReceiverBalance) {
         given()
                 .header("Authorization", userAuthToken)
                 .contentType(ContentType.JSON)
@@ -101,22 +104,22 @@ public class TransferTest {
                 .body("message", Matchers.equalTo("Transfer successful"));
 
         given()
-                .header("Authorization", userAuthToken)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .pathParam("accountId", receiverAccountId)
-                .get(BASE_URL + "/api/v1/accounts/{accountId}/transactions")
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
                 .then()
-                .body("find { it.type == 'TRANSFER_IN' }.amount", Matchers.is((float) expectedTransfer));
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", senderAccountId), Matchers.equalTo(expectedSenderBalance));
 
         given()
-                .header("Authorization", userAuthToken)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .pathParam("accountId", senderAccountId)
-                .get(BASE_URL + "/api/v1/accounts/{accountId}/transactions")
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
                 .then()
-                .body("find { it.type == 'TRANSFER_OUT' }.amount", Matchers.is((float) expectedTransfer));
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", receiverAccountId), Matchers.equalTo(expectedReceiverBalance));
 
 
     }
@@ -124,7 +127,7 @@ public class TransferTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForNegativeTestWithInvalidSum")
     @DisplayName("Проверка ошибки при переводе при различных невалидных тестовых данных")
-    public void shouldNotAllowTransferTest(double value, String errorText) {
+    public void shouldNotAllowTransferTest(double value, String errorText, float expectedSenderBalance,float expectedReceiverBalance) {
         given()
                 .header("Authorization", userAuthToken)
                 .contentType(ContentType.JSON)
@@ -140,6 +143,25 @@ public class TransferTest {
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString(errorText));
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", senderAccountId), Matchers.equalTo(expectedSenderBalance));
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", receiverAccountId), Matchers.equalTo(expectedReceiverBalance));
+
     }
 
     @Test
@@ -176,6 +198,24 @@ public class TransferTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Invalid transfer: insufficient funds or invalid accounts"));
 
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", senderAccountId), Matchers.is((float) MIN_BALANCE));
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", receiverAccountId), Matchers.is((float) STANDART_BALANCE));
+
     }
 
     @Test
@@ -202,22 +242,24 @@ public class TransferTest {
                 .body("message", Matchers.equalTo("Transfer successful"));
 
         given()
-                .header("Authorization", alienUserAuthToken)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .pathParam("accountId", alienAccountId)
-                .get(BASE_URL + "/api/v1/accounts/{accountId}/transactions")
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
                 .then()
-                .body("find { it.type == 'TRANSFER_IN' }.amount", Matchers.is((float) MIN_TRANSFER_SUM));
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", senderAccountId), Matchers.is((float) STANDART_BALANCE));
 
         given()
-                .header("Authorization", userAuthToken)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .pathParam("accountId", senderAccountId)
-                .get(BASE_URL + "/api/v1/accounts/{accountId}/transactions")
+                .header("Authorization", alienUserAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
                 .then()
-                .body("find { it.type == 'TRANSFER_OUT' }.amount", Matchers.is((float) MIN_TRANSFER_SUM));
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", alienAccountId), Matchers.is((float) MIN_BALANCE));
+
+
     }
 
     @Test
@@ -238,7 +280,17 @@ public class TransferTest {
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Invalid transfer: insufficient funds or invalid accounts"));
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", senderAccountId), Matchers.is((float) MAX_BALANCE));
     }
+
     @Test
     @DisplayName("Проверка отсутствия возможности перевода со счета на счет если счет один и тот же")
     public void shouldNotAllowTransferIfSenderAndReceiverAccountSame() {
@@ -257,6 +309,15 @@ public class TransferTest {
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Invalid transfer: insufficient funds or invalid accounts"));
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", senderAccountId), Matchers.is((float) MAX_BALANCE));
     }
 
 }

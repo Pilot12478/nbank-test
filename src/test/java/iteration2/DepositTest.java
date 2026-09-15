@@ -28,6 +28,7 @@ public class DepositTest {
     private static final double SUM_ABOVE_MAX_LIMIT = 5000.01;
     private static final int NEGATIVE_SUM = -400;
     private static final int ZERO_SUM = 0;
+    private static final float INITIAL_BALANCE = 0.0f;
     private static final int INVALID_ACCOUNT = 666;
 
     public static Stream<Arguments> testDataForSuccessTest() {
@@ -98,7 +99,7 @@ public class DepositTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForNegativeTest")
-    @DisplayName("Проверка отсутствия возможности пополнения счета с различными невилидными данными")
+    @DisplayName("Проверка отсутствия возможности пополнения счета с различными невалидными данными")
     public void shouldNotAllowDeposit(double value, String expectedErrorText) {
         given()
                 .contentType(ContentType.JSON)
@@ -114,6 +115,15 @@ public class DepositTest {
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString(expectedErrorText));
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("accounts[0].balance", Matchers.equalTo(INITIAL_BALANCE));
     }
 
     @Test
@@ -133,6 +143,15 @@ public class DepositTest {
                 .then()
                 .statusCode(HttpStatus.SC_FORBIDDEN)
                 .body(Matchers.containsString("Unauthorized access to account"));
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("accounts[0].balance", Matchers.equalTo(INITIAL_BALANCE));
     }
 
 
