@@ -1,88 +1,117 @@
 package Utils;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import io.restassured.specification.RequestSpecification;
-import models.CreateUserModelRequest;
-import org.apache.http.HttpStatus;
-import requests.CreateUserRequester;
+import io.restassured.response.ValidatableResponse;
+import io.restassured.specification.ResponseSpecification;
+import models.*;
+import requests.*;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
-import java.util.List;
+import static Utils.TestDataGenerator.generateUserName;
+import static Utils.TestDataGenerator.getDefaultPassword;
 
-import static io.restassured.RestAssured.given;
 
 public class HelperForIteration2 {
-    public static final String BASE_URL = "http://localhost:4111";
-    public static final String ADMIN_TOKEN = "Basic YWRtaW46YWRtaW4=";
 
-    public static String createUser(String userName, String password, String role) {
+    public static ValidatableResponse createUser(String userName, String password, String role) {
         return new CreateUserRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.created())
                 .send(CreateUserModelRequest.builder()
                         .username(userName)
                         .password(password)
                         .role(role)
+                        .build());
+
+    }
+
+
+    public static int createAccount(String userName, String password) {
+        return new CreateAccountRequester(RequestSpecs.userAuthReq(userName, password), ResponseSpecs.created())
+                .send(null).extract().as(CreateAccountModelResponse.class).getId();
+
+
+    }
+
+    public static AccountInfo createUserAndAccount() {
+        String username = generateUserName();
+        String password = getDefaultPassword();
+        String role = UserRole.USER.toString();
+        CreateUserModelResponse response = createUser(username, password, role).extract().as(CreateUserModelResponse.class);
+        int id = response.getId();
+        int accountId = createAccount(username, password);
+        return new AccountInfo(username, password, accountId, id);
+    }
+
+    public static ValidatableResponse depositAccount(AccountInfo info, double sum, ResponseSpecification responseSpecification) {
+        return new DepositRequester(RequestSpecs.userAuthReq(info.getUsername(), info.getPassword()), responseSpecification)
+                .send(DepositModelRequest
+                        .builder()
+                        .id(info.getAccountId())
+                        .balance(sum)
                         .build()
-                )
-                .extract()
-                .header("Authorization");
 
+                );
 
-//        return given()
-//                .contentType(ContentType.JSON)
-//                .accept(ContentType.JSON)
-//                .header("Authorization", ADMIN_TOKEN)
-//                .body(String.format(
-//
-//                        """
-//                                {
-//                                        "username": "%s",
-//                                        "password": "%s",
-//                                        "role": "%s"
-//                                      }""", userName, password, role
-//                ))
-//                .post(BASE_URL + "/api/v1/admin/users")
-//                .then()
-//                .assertThat()
-//                .statusCode(HttpStatus.SC_CREATED)
-//                .extract()
-//                .header("Authorization");
-    }
-
-    public static int createAccount(String authToken) {
-        return given()
-                .header("Authorization", authToken).
-                post(BASE_URL + "/api/v1/accounts")
-                .then()
-                .statusCode(HttpStatus.SC_CREATED)
-                .extract()
-                .path("id");
 
     }
 
-    public static void depositAccount(String authToken, int accountId, int sum) {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", authToken)
-                .body(String.format("""
-                        {
-                          "id": %d,
-                          "balance": %s
-                        }
-                        """, accountId, sum))
-                .post(BASE_URL + "/api/v1/accounts/deposit");
-
+    public static ValidatableResponse depositAccount(String username, String password, int accountId, double sum, ResponseSpecification responseSpecification) {
+        return new DepositRequester(RequestSpecs.userAuthReq(username, password), responseSpecification)
+                .send(DepositModelRequest
+                        .builder()
+                        .id(accountId)
+                        .balance(sum)
+                        .build());
     }
 
-    public static void logConfig() {
-        RestAssured.filters(
-                List.of(new RequestLoggingFilter(),
-                        new ResponseLoggingFilter())
-        );
 
+    public static ValidatableResponse getUserAccount(AccountInfo info) {
+        return new GetUserProfileRequester(
+                RequestSpecs.userAuthReq(info.getUsername(), info.getPassword()), ResponseSpecs.ok())
+                .send();
     }
+
+
+    public static ValidatableResponse createTransfer(AccountInfo senderAccountInfo, double sum, int receiverAccountId, ResponseSpecification responseSpecification) {
+        return new CreateTransferRequester(RequestSpecs.userAuthReq(senderAccountInfo.getUsername(), senderAccountInfo.getPassword()), responseSpecification)
+                .send(CreateTransferModelRequest
+                        .builder()
+                        .amount(sum)
+                        .senderAccountId(senderAccountInfo.getAccountId())
+                        .receiverAccountId(receiverAccountId)
+                        .build());
+    }
+
+    public static double getAccountBalance(AccountInfo info) {
+        return getUserAccount(info)
+                .extract().as(UserModelResponseProfile.class)
+                .getAccounts().stream()
+                .filter(a -> a.getId() == info.getAccountId())
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account not found: " + info.getAccountId()))
+                .getBalance();
+    }
+
+    public static double getAccountBalance(AccountInfo info, int accountId) {
+        return getUserAccount(info)
+                .extract().as(UserModelResponseProfile.class)
+                .getAccounts().stream()
+                .filter(a -> a.getId() == accountId)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account not found: " + accountId))
+                .getBalance();
+    }
+
+    public static ValidatableResponse updateUserName(AccountInfo accountInfo, String name, ResponseSpecification responseSpecification) {
+        return new UpdateUserNameRequester(RequestSpecs.userAuthReq(
+                accountInfo.getUsername(), accountInfo.getPassword()), responseSpecification)
+                .send(UpdateUserNameModelRequest
+                        .builder()
+                        .name(name)
+                        .build());
+    }
+
+    public static void deleteUser(AccountInfo accountInfo) {
+        new DeleteUserRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.ok(), accountInfo.getUserId()).send();
+    }
+
 }

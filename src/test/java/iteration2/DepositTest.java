@@ -1,27 +1,27 @@
 package iteration2;
 
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
+
+import Utils.AccountInfo;
+import models.BaseModel;
+import models.DepositModelResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
 import static Utils.HelperForIteration2.*;
-import static Utils.TestDataGenerator.generateUserName;
-import static Utils.TestDataGenerator.getDefaultPassword;
-import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.offset;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class DepositTest {
-    private static int accountId;
-    private static String userAuthToken;
+public class DepositTest extends BaseTest {
+    private AccountInfo accountInfo;
     private static final int MAX_DEPOSIT_SUM = 5000;
     private static final double MIN_DEPOSIT_SUM = 0.01;
     private static final double STANDARD_SUM = 4999.99;
@@ -30,13 +30,15 @@ public class DepositTest {
     private static final int ZERO_SUM = 0;
     private static final float INITIAL_BALANCE = 0.0f;
     private static final int INVALID_ACCOUNT = 666;
+    public static final double INITIAL_BALANCE = 0.0;
+    private static final String UNAUTHORIZED_ACCESS = "Unauthorized access to account";
 
     public static Stream<Arguments> testDataForSuccessTest() {
 
         return Stream.of(
-                Arguments.of(STANDARD_SUM, 4999.99f),
-                Arguments.of(MIN_DEPOSIT_SUM, 0.01f),
-                Arguments.of(MAX_DEPOSIT_SUM, 5000f)
+                Arguments.of(STANDARD_SUM, 4999.99),
+                Arguments.of(MIN_DEPOSIT_SUM, 0.01),
+                Arguments.of(MAX_DEPOSIT_SUM, 5000)
         );
     }
 
@@ -49,49 +51,26 @@ public class DepositTest {
         );
     }
 
-    @BeforeAll
-    public static void setUp() {
-        logConfig();
-
-    }
 
     @BeforeEach
     public void preconditionForSuccessTest() {
-        String username = generateUserName();
-        String password = getDefaultPassword();
-        String role = "USER";
-        userAuthToken = createUser(username, password, role);
-        accountId = createAccount(userAuthToken);
+        accountInfo = createUserAndAccount();
 
+    }
+
+    @AfterEach
+    public void deleteUserAccount() {
+        deleteUser(accountInfo);
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForSuccessTest")
     @DisplayName("Проверка успешного пополнения аккаунта пользователем")
-    public void verifyTopUpSuccess(double value, float expectedBalance) {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", userAuthToken)
-                .body(String.format("""
-                        {
-                          "id": %d,
-                          "balance": %s
-                        }
-                        """, accountId, value))
-                .post(BASE_URL + "/api/v1/accounts/deposit")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("balance", Matchers.equalTo(expectedBalance));
-
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", userAuthToken)
-                .get(BASE_URL + "/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", Matchers.equalTo(expectedBalance));
+    public void verifyTopUpSuccess(double value, double expectedBalance) {
+        DepositModelResponse depositModelResponse = depositAccount(accountInfo, value, ResponseSpecs.ok())
+                .extract().as(DepositModelResponse.class);
+        softly.assertThat(expectedBalance).isCloseTo(depositModelResponse.getBalance(),offset(0.001));
+        softly.assertThat(expectedBalance).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
 
 
     }
@@ -101,57 +80,25 @@ public class DepositTest {
     @MethodSource("testDataForNegativeTest")
     @DisplayName("Проверка отсутствия возможности пополнения счета с различными невалидными данными")
     public void shouldNotAllowDeposit(double value, String expectedErrorText) {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", userAuthToken)
-                .body(String.format("""
-                        {
-                          "id": %d,
-                          "balance":%s
-                        }
-                        """, accountId, value))
-                .post(BASE_URL + "/api/v1/accounts/deposit")
-                .then()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString(expectedErrorText));
+        String actualErrorMessage = depositAccount(accountInfo, value, ResponseSpecs.badRequest())
+                .extract()
+                .asString();
+        softly.assertThat(expectedErrorText).isEqualTo(actualErrorMessage);
+        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
 
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", userAuthToken)
-                .get(BASE_URL + "/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", Matchers.equalTo(INITIAL_BALANCE));
+
     }
 
     @Test
     @DisplayName("Проверка отсутствия возможности пополнить аккаунт пользователя, которого не существует")
     public void shouldNotAllowDepositAccountThatNotExist() {
-        given()
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .header("Authorization", userAuthToken)
-                .body(String.format("""
-                         {
-                          "id": %d,
-                          "balance":%s
-                          }
-                        """, INVALID_ACCOUNT, MIN_DEPOSIT_SUM))
-                .post(BASE_URL + "/api/v1/accounts/deposit")
-                .then()
-                .statusCode(HttpStatus.SC_FORBIDDEN)
-                .body(Matchers.containsString("Unauthorized access to account"));
+        String actualErrorMessage = depositAccount(accountInfo.getUsername(), accountInfo.getPassword(), INVALID_ACCOUNT, MIN_DEPOSIT_SUM, ResponseSpecs.forbidden())
+                .extract()
+                .asString();
+        softly.assertThat(UNAUTHORIZED_ACCESS).isEqualTo(actualErrorMessage);
+        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
 
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", userAuthToken)
-                .get(BASE_URL + "/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("accounts[0].balance", Matchers.equalTo(INITIAL_BALANCE));
+
     }
 
 
