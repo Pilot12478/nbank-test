@@ -110,6 +110,24 @@ public class TransferTest extends BaseTest {
                 .extract().asString();
         assertEquals(MSG_INVALID_TRANSFER, actualErrorText);
 
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", senderAccountId), Matchers.is((float) MIN_BALANCE));
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get(BASE_URL + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body(String.format("accounts.find { it.id == %d }.balance", receiverAccountId), Matchers.is((float) STANDART_BALANCE));
+
     }
 
     @Test
