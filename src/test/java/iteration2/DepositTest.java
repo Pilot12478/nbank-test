@@ -28,7 +28,6 @@ public class DepositTest extends BaseTest {
     private static final double SUM_ABOVE_MAX_LIMIT = 5000.01;
     private static final int NEGATIVE_SUM = -400;
     private static final int ZERO_SUM = 0;
-    private static final float INITIAL_BALANCE = 0.0f;
     private static final int INVALID_ACCOUNT = 666;
     public static final double INITIAL_BALANCE = 0.0;
     private static final String UNAUTHORIZED_ACCESS = "Unauthorized access to account";
@@ -78,7 +77,7 @@ public class DepositTest extends BaseTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForNegativeTest")
-    @DisplayName("Проверка отсутствия возможности пополнения счета с различными невалидными данными")
+    @DisplayName("Проверка отсутствия возможности пополнения счета с различными невилидными данными")
     public void shouldNotAllowDeposit(double value, String expectedErrorText) {
         String actualErrorMessage = depositAccount(accountInfo, value, ResponseSpecs.badRequest())
                 .extract()

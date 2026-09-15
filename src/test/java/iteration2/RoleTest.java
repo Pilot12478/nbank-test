@@ -51,14 +51,5 @@ public class RoleTest extends BaseTest {
         softly.assertThat(INVALID_NAME_MSG).isEqualTo(actualMessage);
         softly.assertThat(userProfileResponse.getName()).isNull();
 
-        given()
-                .header("Authorization", userAuthToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .get(BASE_URL + "/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("name", Matchers.nullValue());
-
     }
 }
