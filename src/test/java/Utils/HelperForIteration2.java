@@ -4,6 +4,9 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.ResponseSpecification;
 import models.*;
 import requests.*;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
+import requests.skelethon.requesters.ValidatedCrudRequester;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
@@ -13,9 +16,10 @@ import static Utils.TestDataGenerator.getDefaultPassword;
 
 public class HelperForIteration2 {
 
-    public static ValidatableResponse createUser(String userName, String password, String role) {
-        return new CreateUserRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.created())
-                .send(CreateUserModelRequest.builder()
+    public static CreateUserModelResponse createUser(String userName, String password, String role) {
+        return new ValidatedCrudRequester<CreateUserModelResponse>(RequestSpecs.adminAuthReq(),
+                ResponseSpecs.created(), Endpoint.ADMIN_USER)
+                .post(CreateUserModelRequest.builder()
                         .username(userName)
                         .password(password)
                         .role(role)
@@ -24,9 +28,10 @@ public class HelperForIteration2 {
     }
 
 
-    public static int createAccount(String userName, String password) {
-        return new CreateAccountRequester(RequestSpecs.userAuthReq(userName, password), ResponseSpecs.created())
-                .send(null).extract().as(CreateAccountModelResponse.class).getId();
+    public static CreateAccountModelResponse createAccount(String userName, String password) {
+        return new ValidatedCrudRequester<CreateAccountModelResponse>(RequestSpecs.userAuthReq(userName, password),
+                ResponseSpecs.created(), Endpoint.ACCOUNTS)
+                .post(null);
 
 
     }
@@ -35,15 +40,16 @@ public class HelperForIteration2 {
         String username = generateUserName();
         String password = getDefaultPassword();
         String role = UserRole.USER.toString();
-        CreateUserModelResponse response = createUser(username, password, role).extract().as(CreateUserModelResponse.class);
-        int id = response.getId();
-        int accountId = createAccount(username, password);
+
+        int id = createUser(username, password, role).getId();
+        CreateAccountModelResponse response = createAccount(username, password);
+        int accountId = response.getId();
         return new AccountInfo(username, password, accountId, id);
     }
 
-    public static ValidatableResponse depositAccount(AccountInfo info, double sum, ResponseSpecification responseSpecification) {
-        return new DepositRequester(RequestSpecs.userAuthReq(info.getUsername(), info.getPassword()), responseSpecification)
-                .send(DepositModelRequest
+    public static ValidatableResponse depositAccountNegative(AccountInfo info, double sum, ResponseSpecification responseSpecification) {
+        return new CrudRequester(RequestSpecs.userAuthReq(info.getUsername(), info.getPassword()), responseSpecification, Endpoint.DEPOSIT)
+                .post(DepositModelRequest
                         .builder()
                         .id(info.getAccountId())
                         .balance(sum)
@@ -54,26 +60,46 @@ public class HelperForIteration2 {
 
     }
 
-    public static ValidatableResponse depositAccount(String username, String password, int accountId, double sum, ResponseSpecification responseSpecification) {
-        return new DepositRequester(RequestSpecs.userAuthReq(username, password), responseSpecification)
-                .send(DepositModelRequest
+    public static DepositModelResponse depositAccountPositive(AccountInfo info, double sum, ResponseSpecification responseSpecification) {
+        return new ValidatedCrudRequester<DepositModelResponse>(RequestSpecs.userAuthReq(info.getUsername(), info.getPassword()), responseSpecification, Endpoint.DEPOSIT)
+                .post(DepositModelRequest
                         .builder()
-                        .id(accountId)
+                        .id(info.getAccountId())
                         .balance(sum)
+                        .build()
+
+                );
+
+
+    }
+
+
+    public static UserModelResponseProfile getUserAccount(AccountInfo info) {
+        return new ValidatedCrudRequester<UserModelResponseProfile>(
+                RequestSpecs.userAuthReq(info.getUsername(), info.getPassword()), ResponseSpecs.ok(), Endpoint.USER_PROFILE)
+                .get();
+    }
+
+
+    public static CreateTransferModelResponse createTransferPositive(AccountInfo senderAccountInfo,
+                                                                     double sum, int receiverAccountId,
+                                                                     ResponseSpecification responseSpecification) {
+        return new ValidatedCrudRequester<CreateTransferModelResponse>(RequestSpecs.userAuthReq(senderAccountInfo.getUsername(),
+                senderAccountInfo.getPassword()), responseSpecification, Endpoint.TRANSFER)
+                .post(CreateTransferModelRequest
+                        .builder()
+                        .amount(sum)
+                        .senderAccountId(senderAccountInfo.getAccountId())
+                        .receiverAccountId(receiverAccountId)
                         .build());
     }
 
-
-    public static ValidatableResponse getUserAccount(AccountInfo info) {
-        return new GetUserProfileRequester(
-                RequestSpecs.userAuthReq(info.getUsername(), info.getPassword()), ResponseSpecs.ok())
-                .send();
-    }
-
-
-    public static ValidatableResponse createTransfer(AccountInfo senderAccountInfo, double sum, int receiverAccountId, ResponseSpecification responseSpecification) {
-        return new CreateTransferRequester(RequestSpecs.userAuthReq(senderAccountInfo.getUsername(), senderAccountInfo.getPassword()), responseSpecification)
-                .send(CreateTransferModelRequest
+    public static ValidatableResponse createTransferNegative(AccountInfo senderAccountInfo,
+                                                             double sum, int receiverAccountId,
+                                                             ResponseSpecification responseSpecification) {
+        return new CrudRequester(RequestSpecs.userAuthReq(senderAccountInfo.getUsername(),
+                senderAccountInfo.getPassword()), responseSpecification, Endpoint.TRANSFER)
+                .post(CreateTransferModelRequest
                         .builder()
                         .amount(sum)
                         .senderAccountId(senderAccountInfo.getAccountId())
@@ -83,7 +109,6 @@ public class HelperForIteration2 {
 
     public static double getAccountBalance(AccountInfo info) {
         return getUserAccount(info)
-                .extract().as(UserModelResponseProfile.class)
                 .getAccounts().stream()
                 .filter(a -> a.getId() == info.getAccountId())
                 .findFirst()
@@ -93,7 +118,6 @@ public class HelperForIteration2 {
 
     public static double getAccountBalance(AccountInfo info, int accountId) {
         return getUserAccount(info)
-                .extract().as(UserModelResponseProfile.class)
                 .getAccounts().stream()
                 .filter(a -> a.getId() == accountId)
                 .findFirst()
@@ -101,17 +125,26 @@ public class HelperForIteration2 {
                 .getBalance();
     }
 
-    public static ValidatableResponse updateUserName(AccountInfo accountInfo, String name, ResponseSpecification responseSpecification) {
-        return new UpdateUserNameRequester(RequestSpecs.userAuthReq(
-                accountInfo.getUsername(), accountInfo.getPassword()), responseSpecification)
-                .send(UpdateUserNameModelRequest
+    public static ValidatableResponse updateUserNameNegative(AccountInfo accountInfo, String name, ResponseSpecification responseSpecification) {
+        return new CrudRequester(RequestSpecs.userAuthReq(
+                accountInfo.getUsername(), accountInfo.getPassword()), responseSpecification, Endpoint.USER_NAME)
+                .update(UpdateUserNameModelRequest
+                        .builder()
+                        .name(name)
+                        .build());
+    }
+
+    public static UpdateUserNameModelResponse updateUserNamePositive(AccountInfo accountInfo, String name, ResponseSpecification responseSpecification) {
+        return new ValidatedCrudRequester<UpdateUserNameModelResponse>(RequestSpecs.userAuthReq(
+                accountInfo.getUsername(), accountInfo.getPassword()), responseSpecification, Endpoint.USER_NAME)
+                .update(UpdateUserNameModelRequest
                         .builder()
                         .name(name)
                         .build());
     }
 
     public static void deleteUser(AccountInfo accountInfo) {
-        new DeleteUserRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.ok(), accountInfo.getUserId()).send();
+        new CrudRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.ok(), Endpoint.DELETE_PROFILE).delete(accountInfo.getUserId());
     }
 
 }

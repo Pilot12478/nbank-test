@@ -2,7 +2,6 @@ package iteration2;
 
 
 import Utils.AccountInfo;
-import models.BaseModel;
 import models.DepositModelResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +16,6 @@ import java.util.stream.Stream;
 
 import static Utils.HelperForIteration2.*;
 import static org.assertj.core.api.Assertions.offset;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 public class DepositTest extends BaseTest {
@@ -55,6 +53,7 @@ public class DepositTest extends BaseTest {
     public void preconditionForSuccessTest() {
         accountInfo = createUserAndAccount();
 
+
     }
 
     @AfterEach
@@ -65,11 +64,10 @@ public class DepositTest extends BaseTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForSuccessTest")
     @DisplayName("Проверка успешного пополнения аккаунта пользователем")
-    public void verifyTopUpSuccess(double value, double expectedBalance) {
-        DepositModelResponse depositModelResponse = depositAccount(accountInfo, value, ResponseSpecs.ok())
-                .extract().as(DepositModelResponse.class);
-        softly.assertThat(expectedBalance).isCloseTo(depositModelResponse.getBalance(),offset(0.001));
-        softly.assertThat(expectedBalance).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
+    public void verifyTopUpSuccess(double sum, double expectedBalance) {
+        DepositModelResponse depositModelResponse = depositAccountPositive(accountInfo, sum, ResponseSpecs.ok());
+        softly.assertThat(expectedBalance).isCloseTo(depositModelResponse.getBalance(), offset(0.001));
+        softly.assertThat(expectedBalance).isCloseTo(getAccountBalance(accountInfo), offset(0.001));
 
 
     }
@@ -77,13 +75,11 @@ public class DepositTest extends BaseTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForNegativeTest")
-    @DisplayName("Проверка отсутствия возможности пополнения счета с различными невилидными данными")
-    public void shouldNotAllowDeposit(double value, String expectedErrorText) {
-        String actualErrorMessage = depositAccount(accountInfo, value, ResponseSpecs.badRequest())
-                .extract()
-                .asString();
+    @DisplayName("Проверка отсутствия возможности пополнения счета с различными невалидными данными")
+    public void shouldNotAllowDeposit(double sum, String expectedErrorText) {
+        String actualErrorMessage = depositAccountNegative(accountInfo, sum, ResponseSpecs.badRequest()).extract().asString();
         softly.assertThat(expectedErrorText).isEqualTo(actualErrorMessage);
-        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
+        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo), offset(0.001));
 
 
     }
@@ -91,11 +87,12 @@ public class DepositTest extends BaseTest {
     @Test
     @DisplayName("Проверка отсутствия возможности пополнить аккаунт пользователя, которого не существует")
     public void shouldNotAllowDepositAccountThatNotExist() {
-        String actualErrorMessage = depositAccount(accountInfo.getUsername(), accountInfo.getPassword(), INVALID_ACCOUNT, MIN_DEPOSIT_SUM, ResponseSpecs.forbidden())
-                .extract()
-                .asString();
+        AccountInfo invalidAcc = createUserAndAccount();
+        invalidAcc.setAccountId(INVALID_ACCOUNT);
+        String actualErrorMessage = depositAccountNegative(invalidAcc, MIN_DEPOSIT_SUM, ResponseSpecs.forbidden()).extract().asString();
         softly.assertThat(UNAUTHORIZED_ACCESS).isEqualTo(actualErrorMessage);
-        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
+        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo), offset(0.001));
+        deleteUser(invalidAcc);
 
 
     }

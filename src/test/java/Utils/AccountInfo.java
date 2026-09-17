@@ -11,5 +11,5 @@ public class AccountInfo {
     private String username;
     private String password;
     private int accountId;
-    private  int userId;
+    private int userId;
 }

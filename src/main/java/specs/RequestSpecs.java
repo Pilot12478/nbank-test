@@ -9,40 +9,44 @@ import models.CreateUserModelRequest;
 import models.LoginUserModelRequest;
 import models.LoginUserModelResponse;
 import requests.LoginRequester;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
+import requests.skelethon.requesters.ValidatedCrudRequester;
 
 import java.util.List;
 
 public class RequestSpecs {
-    private static RequestSpecBuilder defaultReq(){
+    private static RequestSpecBuilder defaultReq() {
         return new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
-                .setBaseUri("http://localhost:4111")
+                .setBaseUri("http://localhost:4111/api/v1")
                 .addFilters(List.of(new ResponseLoggingFilter()
-                        ,new RequestLoggingFilter()));
+                        , new RequestLoggingFilter()));
     }
-    public static RequestSpecification unAuthReq(){
+
+    public static RequestSpecification unAuthReq() {
         return defaultReq()
                 .build();
     }
-    public static RequestSpecification adminAuthReq(){
+
+    public static RequestSpecification adminAuthReq() {
         return defaultReq()
-                .addHeader("Authorization","Basic YWRtaW46YWRtaW4=")
+                .addHeader("Authorization", "Basic YWRtaW46YWRtaW4=")
                 .build();
     }
-    public static RequestSpecification userAuthReq(String username,String password) {
-        String auth =new LoginRequester(RequestSpecs.unAuthReq(),ResponseSpecs.ok())
-                .send(LoginUserModelRequest.builder()
+
+    public static RequestSpecification userAuthReq(String username, String password) {
+        String auth = new CrudRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.ok(), Endpoint.LOGIN)
+                .post(LoginUserModelRequest.builder()
                         .username(username)
                         .password(password)
-                        .build()
-                )
-                .extract()
+                        .build()).extract()
                 .header("Authorization");
 
 
         return defaultReq()
-                .addHeader("Authorization",auth)
+                .addHeader("Authorization", auth)
                 .build();
     }
 }

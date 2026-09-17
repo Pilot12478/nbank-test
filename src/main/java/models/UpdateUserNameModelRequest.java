@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UpdateUserNameModelRequest {
+public class UpdateUserNameModelRequest extends BaseModel {
     private String name;
 }
