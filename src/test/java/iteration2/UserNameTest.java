@@ -1,6 +1,6 @@
 package iteration2;
 
-import Utils.AccountInfo;
+import utils.AccountInfo;
 import models.UpdateUserNameModelResponse;
 import models.UserModelResponseProfile;
 import org.junit.jupiter.api.AfterEach;
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import specs.ResponseSpecs;
 
-import static Utils.HelperForIteration2.*;
+import static utils.HelperForIteration2.*;
 
 public class UserNameTest extends BaseTest {
     private static final String VALID_USER_NAME = "John Duck";
@@ -19,7 +19,7 @@ public class UserNameTest extends BaseTest {
 
 
     @BeforeEach
-    public void preconditionForSuccessTest() {
+    public void setUp() {
         accountInfo = createUserAndAccount();
     }
 
@@ -33,21 +33,18 @@ public class UserNameTest extends BaseTest {
     public void successChangeNameTest() {
         UpdateUserNameModelResponse userModelResponse = updateUserNamePositive(accountInfo, VALID_USER_NAME, ResponseSpecs.ok());
         UserModelResponseProfile userProfileResponse = getUserAccount(accountInfo);
-        softly.assertThat(VALID_USER_NAME).isEqualTo(userModelResponse.getCustomer().getName());
-        softly.assertThat(VALID_USER_NAME).isEqualTo(userProfileResponse.getName());
+        softly.assertThat(userModelResponse.getCustomer().getName()).isEqualTo(VALID_USER_NAME);
+        softly.assertThat(userProfileResponse.getName()).isEqualTo(VALID_USER_NAME);
 
     }
 
     @Test
     @DisplayName("Проверка сценария с ошибкой при вводе имени одним словом")
     public void negativeChangeNameTest() {
-
         String actualMessage = updateUserNameNegative(accountInfo, INVALID_USER_NAME, ResponseSpecs.badRequest())
                 .extract().asString();
-
         UserModelResponseProfile userProfileResponse = getUserAccount(accountInfo);
-
-        softly.assertThat(INVALID_NAME_MSG).isEqualTo(actualMessage);
+        softly.assertThat(actualMessage).isEqualTo(INVALID_NAME_MSG);
         softly.assertThat(userProfileResponse.getName()).isNull();
 
     }

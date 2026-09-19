@@ -5,13 +5,9 @@ import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import models.CreateUserModelRequest;
 import models.LoginUserModelRequest;
-import models.LoginUserModelResponse;
-import requests.LoginRequester;
 import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
-import requests.skelethon.requesters.ValidatedCrudRequester;
 
 import java.util.List;
 

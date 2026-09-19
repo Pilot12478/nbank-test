@@ -1,6 +1,6 @@
 package iteration2;
 
-import Utils.AccountInfo;
+import utils.AccountInfo;
 import models.CreateTransferModelResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,9 +13,8 @@ import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
-import static Utils.HelperForIteration2.*;
+import static utils.HelperForIteration2.*;
 import static org.assertj.core.api.Assertions.offset;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TransferTest extends BaseTest {
     private AccountInfo senderAccountInfo;
@@ -27,7 +26,7 @@ public class TransferTest extends BaseTest {
     private static final double SUM_ABOVE_TRANSFER_LIMIT = 10000.01;
     private static final int NEGATIVE_TRANSFER_SUM = -333;
     private static final int ACCOUNT_THAT_NOT_EXIST = 34434;
-    public static final double INITIAL_BALANCE = DEPOSIT_SUM * 2;
+    private static final double INITIAL_BALANCE = DEPOSIT_SUM * 2;
 
     private static final String MSG_MIN_AMOUNT = "Transfer amount must be at least 0.01";
     private static final String MSG_EXCEEDS_LIMIT = "Transfer amount cannot exceed 10000";
@@ -36,7 +35,7 @@ public class TransferTest extends BaseTest {
 
 
     @BeforeEach
-    public void preconditionForSuccessTest() {
+    public void setUp() {
         senderAccountInfo = createUserAndAccount();
         depositAccountPositive(senderAccountInfo, DEPOSIT_SUM, ResponseSpecs.ok());
         depositAccountPositive(senderAccountInfo, DEPOSIT_SUM, ResponseSpecs.ok());
@@ -76,13 +75,13 @@ public class TransferTest extends BaseTest {
 
         CreateTransferModelResponse response = createTransferPositive(senderAccountInfo, sum, receiverAccountId, ResponseSpecs.ok());
 
-        softly.assertThat(sum).isEqualTo(response.getAmount());
-        softly.assertThat(receiverAccountId).isEqualTo(response.getReceiverAccountId());
-        softly.assertThat(senderAccountId).isEqualTo(response.getSenderAccountId());
-        softly.assertThat(MSG_TRANSFER_SUCCESS).isEqualTo(response.getMessage());
+        softly.assertThat(response.getAmount()).isCloseTo(sum, offset(0.001));
+        softly.assertThat(response.getReceiverAccountId()).isEqualTo(receiverAccountId);
+        softly.assertThat(response.getSenderAccountId()).isEqualTo(senderAccountId);
+        softly.assertThat(response.getMessage()).isEqualTo(MSG_TRANSFER_SUCCESS);
 
-        softly.assertThat(expectedSenderBalance).isCloseTo(getAccountBalance(senderAccountInfo, senderAccountId), offset(0.001));
-        softly.assertThat(expectedReceiverBalance).isCloseTo(getAccountBalance(senderAccountInfo, receiverAccountId), offset(0.001));
+        softly.assertThat(getAccountBalance(senderAccountInfo, senderAccountId)).isCloseTo(expectedSenderBalance, offset(0.001));
+        softly.assertThat(getAccountBalance(senderAccountInfo, receiverAccountId)).isCloseTo(expectedReceiverBalance, offset(0.001));
 
     }
 
@@ -94,7 +93,8 @@ public class TransferTest extends BaseTest {
         String actualErrorText = createTransferNegative(senderAccountInfo, sum, receiverAccountId, ResponseSpecs.badRequest())
                 .extract().asString();
 
-        assertEquals(expectedErrorText, actualErrorText);
+        softly.assertThat(actualErrorText).isEqualTo(expectedErrorText);
+        softly.assertThat(getAccountBalance(senderAccountInfo)).isCloseTo(INITIAL_BALANCE, offset(0.001));
 
     }
 
@@ -106,7 +106,8 @@ public class TransferTest extends BaseTest {
         createTransferPositive(senderAccountInfo, MAX_TRANSFER_SUM, receiverAccountId, ResponseSpecs.ok());
         String actualErrorText = createTransferNegative(senderAccountInfo, MAX_TRANSFER_SUM, receiverAccountId, ResponseSpecs.badRequest())
                 .extract().asString();
-        assertEquals(MSG_INVALID_TRANSFER, actualErrorText);
+        softly.assertThat(actualErrorText).isEqualTo(MSG_INVALID_TRANSFER);
+        softly.assertThat(getAccountBalance(senderAccountInfo)).isCloseTo(INITIAL_BALANCE, offset(0.001));
 
     }
 
@@ -118,13 +119,13 @@ public class TransferTest extends BaseTest {
         int receiverAccountId = receiverAccountInfo.getAccountId();
         CreateTransferModelResponse response = createTransferPositive(senderAccountInfo, MIN_TRANSFER_SUM, receiverAccountId, ResponseSpecs.ok());
 
-        softly.assertThat(MIN_TRANSFER_SUM).isEqualTo(response.getAmount());
-        softly.assertThat(receiverAccountId).isEqualTo(response.getReceiverAccountId());
-        softly.assertThat(senderAccountId).isEqualTo(response.getSenderAccountId());
-        softly.assertThat(MSG_TRANSFER_SUCCESS).isEqualTo(response.getMessage());
+        softly.assertThat(response.getAmount()).isCloseTo(MIN_TRANSFER_SUM, offset(0.001));
+        softly.assertThat(response.getReceiverAccountId()).isEqualTo(receiverAccountId);
+        softly.assertThat(response.getSenderAccountId()).isEqualTo(senderAccountId);
+        softly.assertThat(response.getMessage()).isEqualTo(MSG_TRANSFER_SUCCESS);
 
-        softly.assertThat(INITIAL_BALANCE - MIN_TRANSFER_SUM).isCloseTo(getAccountBalance(senderAccountInfo), offset(0.001));
-        softly.assertThat(MIN_TRANSFER_SUM).isCloseTo(getAccountBalance(receiverAccountInfo), offset(0.001));
+        softly.assertThat(getAccountBalance(senderAccountInfo)).isCloseTo(INITIAL_BALANCE - MIN_TRANSFER_SUM, offset(0.001));
+        softly.assertThat(getAccountBalance(receiverAccountInfo)).isCloseTo(MIN_TRANSFER_SUM, offset(0.001));
         deleteUser(receiverAccountInfo);
 
     }
@@ -135,7 +136,8 @@ public class TransferTest extends BaseTest {
         String actualErrorText = createTransferNegative(senderAccountInfo, MIN_TRANSFER_SUM, ACCOUNT_THAT_NOT_EXIST, ResponseSpecs.badRequest())
                 .extract().asString();
 
-        assertEquals(MSG_INVALID_TRANSFER, actualErrorText);
+        softly.assertThat(actualErrorText).isEqualTo(MSG_INVALID_TRANSFER);
+        softly.assertThat(getAccountBalance(senderAccountInfo)).isCloseTo(INITIAL_BALANCE, offset(0.001));
     }
 
     @Test
@@ -144,7 +146,9 @@ public class TransferTest extends BaseTest {
         String actualErrorText = createTransferNegative(senderAccountInfo, MIN_TRANSFER_SUM, senderAccountInfo.getAccountId(), ResponseSpecs.badRequest())
                 .extract().asString();
 
-        assertEquals(MSG_INVALID_TRANSFER, actualErrorText);
+
+        softly.assertThat(actualErrorText).isEqualTo(MSG_INVALID_TRANSFER);
+        softly.assertThat(getAccountBalance(senderAccountInfo)).isCloseTo(INITIAL_BALANCE, offset(0.001));
 
     }
 

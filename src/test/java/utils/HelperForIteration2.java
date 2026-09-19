@@ -1,17 +1,16 @@
-package Utils;
+package utils;
 
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.ResponseSpecification;
 import models.*;
-import requests.*;
 import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
 import requests.skelethon.requesters.ValidatedCrudRequester;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
-import static Utils.TestDataGenerator.generateUserName;
-import static Utils.TestDataGenerator.getDefaultPassword;
+import static utils.TestDataGenerator.generateUserName;
+import static utils.TestDataGenerator.getDefaultPassword;
 
 
 public class HelperForIteration2 {
@@ -108,12 +107,7 @@ public class HelperForIteration2 {
     }
 
     public static double getAccountBalance(AccountInfo info) {
-        return getUserAccount(info)
-                .getAccounts().stream()
-                .filter(a -> a.getId() == info.getAccountId())
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Account not found: " + info.getAccountId()))
-                .getBalance();
+        return getAccountBalance(info, info.getAccountId());
     }
 
     public static double getAccountBalance(AccountInfo info, int accountId) {

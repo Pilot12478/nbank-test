@@ -1,4 +1,4 @@
-package Utils;
+package utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
