@@ -1,5 +1,6 @@
 package utils;
 
+import generators.RandomModelGenerator;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.ResponseSpecification;
 import models.*;
@@ -8,6 +9,8 @@ import requests.skelethon.requesters.CrudRequester;
 import requests.skelethon.requesters.ValidatedCrudRequester;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
+
+import javax.management.relation.Role;
 
 import static utils.TestDataGenerator.generateUserName;
 import static utils.TestDataGenerator.getDefaultPassword;
@@ -36,8 +39,9 @@ public class HelperForIteration2 {
     }
 
     public static AccountInfo createUserAndAccount() {
-        String username = generateUserName();
-        String password = getDefaultPassword();
+        CreateUserModelRequest request = RandomModelGenerator.generate(CreateUserModelRequest.class);
+        String username = request.getUsername();
+        String password = request.getPassword();
         String role = UserRole.USER.toString();
 
         int id = createUser(username, password, role).getId();

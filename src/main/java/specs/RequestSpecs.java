@@ -1,5 +1,6 @@
 package specs;
 
+import configs.Config;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
@@ -16,7 +17,7 @@ public class RequestSpecs {
         return new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
-                .setBaseUri("http://localhost:4111/api/v1")
+                .setBaseUri(Config.getProperty("server")+Config.getProperty("apiVersion"))
                 .addFilters(List.of(new ResponseLoggingFilter()
                         , new RequestLoggingFilter()));
     }
