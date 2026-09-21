@@ -24,6 +24,7 @@ import static steps.TransferSteps.transferExpectingBadRequest;
 
 public class TransferTest extends BaseTest {
     private UserInfo userInfo;
+    private UserInfo anotherUserInfo;
     private int userAccount;
     private static final int MAX_DEPOSIT_SUM = 5000;
     private static final int MAX_TRANSFER_SUM = 10000;
@@ -52,6 +53,7 @@ public class TransferTest extends BaseTest {
     @AfterEach
     public void deleteUserAccount() {
         AdminSteps.deleteUser(userInfo);
+        AdminSteps.deleteUser(anotherUserInfo);
     }
 
 
@@ -82,7 +84,7 @@ public class TransferTest extends BaseTest {
 
 
         CreateTransferModelResponse response = createTransfer(userInfo, senderAccountId, sum, receiverAccountId);
-        assertThatTransfer(response,softly).isSuccessful(sum, senderAccountId, receiverAccountId);
+        assertThatTransfer(response, softly).isSuccessful(sum, senderAccountId, receiverAccountId);
 
         softly.assertThat(getAccountBalance(userInfo, senderAccountId)).isCloseTo(expectedSenderBalance, offset(0.001));
         softly.assertThat(getAccountBalance(userInfo, receiverAccountId)).isCloseTo(expectedReceiverBalance, offset(0.001));
@@ -116,16 +118,15 @@ public class TransferTest extends BaseTest {
     @Test
     @DisplayName("Проверка успешного перевода денежных средств на сторонний аккаунт")
     public void checkTransferToAlienAccount() {
-        UserInfo anotherUserInfo = createUser();
+        anotherUserInfo = createUser();
         int anotherUserAccount = createAccount(anotherUserInfo);
 
         CreateTransferModelResponse response = createTransfer(userInfo, userAccount, MIN_TRANSFER_SUM, anotherUserAccount);
 
-        assertThatTransfer(response,softly).isSuccessful(MIN_TRANSFER_SUM, userAccount, anotherUserAccount);
+        assertThatTransfer(response, softly).isSuccessful(MIN_TRANSFER_SUM, userAccount, anotherUserAccount);
 
         softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE - MIN_TRANSFER_SUM, offset(0.001));
         softly.assertThat(getAccountBalance(anotherUserInfo, anotherUserAccount)).isCloseTo(MIN_TRANSFER_SUM, offset(0.001));
-        AdminSteps.deleteUser(anotherUserInfo);
 
     }
 
