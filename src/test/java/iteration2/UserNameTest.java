@@ -7,8 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import steps.AdminSteps;
-import steps.UserNameSteps;
 import steps.UserInfo;
+import steps.UserNameSteps;
 
 import static steps.UserInfoSteps.getUserAccount;
 import static steps.UserNameSteps.updateUserName;

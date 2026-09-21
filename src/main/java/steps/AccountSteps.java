@@ -22,7 +22,7 @@ public class AccountSteps {
                 .getAccounts().stream()
                 .filter(a -> a.getId() == accountId)
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("Account not found: " + accountId))
+                .get()
                 .getBalance();
     }
 }

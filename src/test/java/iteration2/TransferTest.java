@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import steps.AccountSteps;
 import steps.AdminSteps;
 import steps.DepositSteps;
 import steps.UserInfo;
 
 import java.util.stream.Stream;
 
+import static iteration2.TransferAsserts.assertThatTransfer;
 import static org.assertj.core.api.Assertions.offset;
 import static steps.AccountSteps.createAccount;
 import static steps.AccountSteps.getAccountBalance;
@@ -38,7 +38,7 @@ public class TransferTest extends BaseTest {
     private static final String MSG_MIN_AMOUNT = "Transfer amount must be at least 0.01";
     private static final String MSG_EXCEEDS_LIMIT = "Transfer amount cannot exceed 10000";
     private static final String MSG_INVALID_TRANSFER = "Invalid transfer: insufficient funds or invalid accounts";
-    private static final String MSG_TRANSFER_SUCCESS = "Transfer successful";
+    public static final String MSG_TRANSFER_SUCCESS = "Transfer successful";
 
 
     @BeforeEach
@@ -82,11 +82,7 @@ public class TransferTest extends BaseTest {
 
 
         CreateTransferModelResponse response = createTransfer(userInfo, senderAccountId, sum, receiverAccountId);
-
-        softly.assertThat(response.getAmount()).isCloseTo(sum, offset(0.001));
-        softly.assertThat(response.getReceiverAccountId()).isEqualTo(receiverAccountId);
-        softly.assertThat(response.getSenderAccountId()).isEqualTo(senderAccountId);
-        softly.assertThat(response.getMessage()).isEqualTo(MSG_TRANSFER_SUCCESS);
+        assertThatTransfer(response,softly).isSuccessful(sum, senderAccountId, receiverAccountId);
 
         softly.assertThat(getAccountBalance(userInfo, senderAccountId)).isCloseTo(expectedSenderBalance, offset(0.001));
         softly.assertThat(getAccountBalance(userInfo, receiverAccountId)).isCloseTo(expectedReceiverBalance, offset(0.001));
@@ -125,10 +121,7 @@ public class TransferTest extends BaseTest {
 
         CreateTransferModelResponse response = createTransfer(userInfo, userAccount, MIN_TRANSFER_SUM, anotherUserAccount);
 
-        softly.assertThat(response.getAmount()).isCloseTo(MIN_TRANSFER_SUM, offset(0.001));
-        softly.assertThat(response.getReceiverAccountId()).isEqualTo(anotherUserAccount);
-        softly.assertThat(response.getSenderAccountId()).isEqualTo(userAccount);
-        softly.assertThat(response.getMessage()).isEqualTo(MSG_TRANSFER_SUCCESS);
+        assertThatTransfer(response,softly).isSuccessful(MIN_TRANSFER_SUM, userAccount, anotherUserAccount);
 
         softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE - MIN_TRANSFER_SUM, offset(0.001));
         softly.assertThat(getAccountBalance(anotherUserInfo, anotherUserAccount)).isCloseTo(MIN_TRANSFER_SUM, offset(0.001));
