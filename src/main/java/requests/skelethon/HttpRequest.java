@@ -1,17 +1,16 @@
-package requests;
+package requests.skelethon;
 
-import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 
-public abstract class RequestNoBody {
+public abstract class HttpRequest {
     protected RequestSpecification requestSpecification;
     protected ResponseSpecification responseSpecification;
+    protected Endpoint endpoint;
 
-    public RequestNoBody(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
+    public HttpRequest(RequestSpecification requestSpecification, ResponseSpecification responseSpecification, Endpoint endpoint) {
         this.requestSpecification = requestSpecification;
         this.responseSpecification = responseSpecification;
+        this.endpoint = endpoint;
     }
-
-    public abstract ValidatableResponse send();
 }

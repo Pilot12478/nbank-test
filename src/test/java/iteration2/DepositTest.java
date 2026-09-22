@@ -1,8 +1,6 @@
 package iteration2;
 
 
-import Utils.AccountInfo;
-import models.BaseModel;
 import models.DepositModelResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,17 +9,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import specs.ResponseSpecs;
+import steps.AccountSteps;
+import steps.AdminSteps;
+import steps.UserInfo;
 
 import java.util.stream.Stream;
 
-import static Utils.HelperForIteration2.*;
 import static org.assertj.core.api.Assertions.offset;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static steps.AccountSteps.getAccountBalance;
+import static steps.DepositSteps.*;
 
 
 public class DepositTest extends BaseTest {
-    private AccountInfo accountInfo;
+    private UserInfo userInfo;
+    private int userAccount;
     private static final int MAX_DEPOSIT_SUM = 5000;
     private static final double MIN_DEPOSIT_SUM = 0.01;
     private static final double STANDARD_SUM = 4999.99;
@@ -35,9 +36,9 @@ public class DepositTest extends BaseTest {
     public static Stream<Arguments> testDataForSuccessTest() {
 
         return Stream.of(
-                Arguments.of(STANDARD_SUM, 4999.99),
-                Arguments.of(MIN_DEPOSIT_SUM, 0.01),
-                Arguments.of(MAX_DEPOSIT_SUM, 5000)
+                Arguments.of(STANDARD_SUM, STANDARD_SUM),
+                Arguments.of(MIN_DEPOSIT_SUM, MIN_DEPOSIT_SUM),
+                Arguments.of(MAX_DEPOSIT_SUM, MAX_DEPOSIT_SUM)
         );
     }
 
@@ -52,24 +53,23 @@ public class DepositTest extends BaseTest {
 
 
     @BeforeEach
-    public void preconditionForSuccessTest() {
-        accountInfo = createUserAndAccount();
-
+    public void setUp() {
+        userInfo = AdminSteps.createUser();
+        userAccount = AccountSteps.createAccount(userInfo);
     }
 
     @AfterEach
     public void deleteUserAccount() {
-        deleteUser(accountInfo);
+        AdminSteps.deleteUser(userInfo);
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForSuccessTest")
     @DisplayName("Проверка успешного пополнения аккаунта пользователем")
-    public void verifyTopUpSuccess(double value, double expectedBalance) {
-        DepositModelResponse depositModelResponse = depositAccount(accountInfo, value, ResponseSpecs.ok())
-                .extract().as(DepositModelResponse.class);
-        softly.assertThat(expectedBalance).isCloseTo(depositModelResponse.getBalance(),offset(0.001));
-        softly.assertThat(expectedBalance).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
+    public void verifyTopUpSuccess(double sum, double expectedBalance) {
+        DepositModelResponse depositModelResponse = depositAccount(userInfo, userAccount, sum);
+        softly.assertThat(depositModelResponse.getBalance()).isCloseTo(expectedBalance, offset(0.001));
+        softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(expectedBalance, offset(0.001));
 
 
     }
@@ -77,13 +77,11 @@ public class DepositTest extends BaseTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForNegativeTest")
-    @DisplayName("Проверка отсутствия возможности пополнения счета с различными невилидными данными")
-    public void shouldNotAllowDeposit(double value, String expectedErrorText) {
-        String actualErrorMessage = depositAccount(accountInfo, value, ResponseSpecs.badRequest())
-                .extract()
-                .asString();
-        softly.assertThat(expectedErrorText).isEqualTo(actualErrorMessage);
-        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
+    @DisplayName("Проверка отсутствия возможности пополнения счета с различными невалидными данными")
+    public void shouldNotAllowDeposit(double sum, String expectedErrorText) {
+        String actualErrorMessage = depositExpectingBadRequest(userInfo, userAccount, sum);
+        softly.assertThat(actualErrorMessage).isEqualTo(expectedErrorText);
+        softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE, offset(0.001));
 
 
     }
@@ -91,16 +89,10 @@ public class DepositTest extends BaseTest {
     @Test
     @DisplayName("Проверка отсутствия возможности пополнить аккаунт пользователя, которого не существует")
     public void shouldNotAllowDepositAccountThatNotExist() {
-        String actualErrorMessage = depositAccount(accountInfo.getUsername(), accountInfo.getPassword(), INVALID_ACCOUNT, MIN_DEPOSIT_SUM, ResponseSpecs.forbidden())
-                .extract()
-                .asString();
-        softly.assertThat(UNAUTHORIZED_ACCESS).isEqualTo(actualErrorMessage);
-        softly.assertThat(INITIAL_BALANCE).isCloseTo(getAccountBalance(accountInfo),offset(0.001));
-
-
+        String actualErrorMessage = depositExpectingForbidden(userInfo, INVALID_ACCOUNT, MIN_DEPOSIT_SUM);
+        softly.assertThat(actualErrorMessage).isEqualTo(UNAUTHORIZED_ACCESS);
+        softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE, offset(0.001));
     }
-
-
 }
 
 

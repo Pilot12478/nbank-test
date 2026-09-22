@@ -1,6 +1,5 @@
 package iteration2;
 
-import Utils.AccountInfo;
 import models.CreateTransferModelResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,51 +8,60 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import specs.ResponseSpecs;
+import steps.AdminSteps;
+import steps.DepositSteps;
+import steps.UserInfo;
 
 import java.util.stream.Stream;
 
-import static Utils.HelperForIteration2.*;
-import static Utils.HelperForIteration2.deleteUser;
-import static Utils.HelperForIteration2.getAccountBalance;
+import static iteration2.TransferAsserts.assertThatTransfer;
 import static org.assertj.core.api.Assertions.offset;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static steps.AccountSteps.createAccount;
+import static steps.AccountSteps.getAccountBalance;
+import static steps.AdminSteps.createUser;
+import static steps.TransferSteps.createTransfer;
+import static steps.TransferSteps.transferExpectingBadRequest;
 
 public class TransferTest extends BaseTest {
-    private AccountInfo senderAccountInfo;
-    private static final int DEPOSIT_SUM = 5000;
+    private UserInfo userInfo;
+    private UserInfo anotherUserInfo;
+    private int userAccount;
+    private static final int MAX_DEPOSIT_SUM = 5000;
     private static final int MAX_TRANSFER_SUM = 10000;
     private static final double MIN_TRANSFER_SUM = 0.01;
-    private static final double STANDART_TRANSFER_SUM = 9999.99;
+    private static final double STANDARD_TRANSFER_SUM = 9999.99;
     private static final int ZERO_TRANSFER_SUM = 0;
     private static final double SUM_ABOVE_TRANSFER_LIMIT = 10000.01;
     private static final int NEGATIVE_TRANSFER_SUM = -333;
     private static final int ACCOUNT_THAT_NOT_EXIST = 34434;
-    public static final double INITIAL_BALANCE = 0.0;
+    private static final double INITIAL_BALANCE = MAX_DEPOSIT_SUM * 2;
 
     private static final String MSG_MIN_AMOUNT = "Transfer amount must be at least 0.01";
     private static final String MSG_EXCEEDS_LIMIT = "Transfer amount cannot exceed 10000";
     private static final String MSG_INVALID_TRANSFER = "Invalid transfer: insufficient funds or invalid accounts";
-    private static final String MSG_TRANSFER_SUCCESS = "Transfer successful";
+    public static final String MSG_TRANSFER_SUCCESS = "Transfer successful";
 
 
     @BeforeEach
-    public void preconditionForSuccessTest() {
-        senderAccountInfo = createUserAndAccount();
-        depositAccount(senderAccountInfo, DEPOSIT_SUM, ResponseSpecs.ok());
-        depositAccount(senderAccountInfo, DEPOSIT_SUM, ResponseSpecs.ok());
+    public void setUp() {
+        userInfo = createUser();
+        userAccount = createAccount(userInfo);
+        DepositSteps.depositAccount(userInfo, userAccount, MAX_DEPOSIT_SUM);
+        DepositSteps.depositAccount(userInfo, userAccount, MAX_DEPOSIT_SUM);
     }
+
     @AfterEach
     public void deleteUserAccount() {
-        deleteUser(senderAccountInfo);
+        AdminSteps.deleteUser(userInfo);
+        AdminSteps.deleteUser(anotherUserInfo);
     }
 
 
     public static Stream<Arguments> testDataForSuccessTest() {
         return Stream.of(
-                Arguments.of(MAX_TRANSFER_SUM, INITIAL_BALANCE, MAX_TRANSFER_SUM),
-                Arguments.of(MIN_TRANSFER_SUM, STANDART_TRANSFER_SUM, MIN_TRANSFER_SUM),
-                Arguments.of(STANDART_TRANSFER_SUM, MIN_TRANSFER_SUM, STANDART_TRANSFER_SUM)
+                Arguments.of(MAX_TRANSFER_SUM, INITIAL_BALANCE - MAX_TRANSFER_SUM, MAX_TRANSFER_SUM),
+                Arguments.of(MIN_TRANSFER_SUM, INITIAL_BALANCE - MIN_TRANSFER_SUM, MIN_TRANSFER_SUM),
+                Arguments.of(STANDARD_TRANSFER_SUM, INITIAL_BALANCE - STANDARD_TRANSFER_SUM, STANDARD_TRANSFER_SUM)
 
         );
     }
@@ -70,33 +78,28 @@ public class TransferTest extends BaseTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForSuccessTest")
     @DisplayName("Проверка успешного перевода денежных средств между своими счетами")
-    public void checkMeToMeSuccessTransfer(double value, double expectedSenderBalance, double expectedReceiverBalance) {
-        int senderAccountId = senderAccountInfo.getAccountId();
-        int receiverAccountId = createAccount(senderAccountInfo.getUsername(), senderAccountInfo.getPassword());
+    public void checkMeToMeSuccessTransfer(double sum, double expectedSenderBalance, double expectedReceiverBalance) {
+        int senderAccountId = userAccount;
+        int receiverAccountId = createAccount(userInfo);
 
 
-        CreateTransferModelResponse response = createTransfer(senderAccountInfo, value, receiverAccountId, ResponseSpecs.ok())
-                .extract().as(CreateTransferModelResponse.class);
+        CreateTransferModelResponse response = createTransfer(userInfo, senderAccountId, sum, receiverAccountId);
+        assertThatTransfer(response, softly).isSuccessful(sum, senderAccountId, receiverAccountId);
 
-        softly.assertThat(value).isEqualTo(response.getAmount());
-        softly.assertThat(receiverAccountId).isEqualTo( response.getReceiverAccountId());
-        softly.assertThat(senderAccountId).isEqualTo(response.getSenderAccountId());
-        softly.assertThat(MSG_TRANSFER_SUCCESS).isEqualTo(response.getMessage());
-
-        softly.assertThat(expectedSenderBalance).isCloseTo(getAccountBalance(senderAccountInfo,senderAccountId),offset(0.001));
-        softly.assertThat(expectedReceiverBalance).isCloseTo(getAccountBalance(senderAccountInfo,receiverAccountId),offset(0.001));
+        softly.assertThat(getAccountBalance(userInfo, senderAccountId)).isCloseTo(expectedSenderBalance, offset(0.001));
+        softly.assertThat(getAccountBalance(userInfo, receiverAccountId)).isCloseTo(expectedReceiverBalance, offset(0.001));
 
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForNegativeTestWithInvalidSum")
     @DisplayName("Проверка ошибки при переводе при различных невалидных тестовых данных")
-    public void shouldNotAllowTransferTest(double value, String expectedErrorText) {
-        int receiverAccountId = createAccount(senderAccountInfo.getUsername(), senderAccountInfo.getPassword());
-        String actualErrorText = createTransfer(senderAccountInfo, value, receiverAccountId, ResponseSpecs.badRequest())
-                .extract().asString();
+    public void shouldNotAllowTransferTest(double sum, String expectedErrorText) {
+        int receiverAccountId = createAccount(userInfo);
+        String actualErrorText = transferExpectingBadRequest(userInfo, userAccount, sum, receiverAccountId);
 
-        assertEquals(expectedErrorText, actualErrorText);
+        softly.assertThat(actualErrorText).isEqualTo(expectedErrorText);
+        softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE, offset(0.001));
 
     }
 
@@ -104,51 +107,44 @@ public class TransferTest extends BaseTest {
     @DisplayName("Проверка перевода суммы, которая превышает баланс отправителя")
     public void shouldNotAllowTransferWhenBalanceHasNotEnoughMoney() {
 
-        int receiverAccountId = createAccount(senderAccountInfo.getUsername(), senderAccountInfo.getPassword());
-        createTransfer(senderAccountInfo, MAX_TRANSFER_SUM, receiverAccountId, ResponseSpecs.ok());
-        String actualErrorText = createTransfer(senderAccountInfo, MAX_TRANSFER_SUM, receiverAccountId, ResponseSpecs.badRequest())
-                .extract().asString();
-        assertEquals(MSG_INVALID_TRANSFER, actualErrorText);
+        int receiverAccountId = createAccount(userInfo);
+        createTransfer(userInfo, userAccount, MAX_TRANSFER_SUM, receiverAccountId);
+        String actualErrorText = transferExpectingBadRequest(userInfo, userAccount, MAX_TRANSFER_SUM, receiverAccountId);
+        softly.assertThat(actualErrorText).isEqualTo(MSG_INVALID_TRANSFER);
+        softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE - MAX_TRANSFER_SUM, offset(0.001));
 
     }
 
     @Test
     @DisplayName("Проверка успешного перевода денежных средств на сторонний аккаунт")
     public void checkTransferToAlienAccount() {
-        AccountInfo receiverAccountInfo = createUserAndAccount();
-        int senderAccountId = senderAccountInfo.getAccountId();
-        int receiverAccountId = receiverAccountInfo.getAccountId();
-        CreateTransferModelResponse response = createTransfer(senderAccountInfo, MIN_TRANSFER_SUM, receiverAccountId, ResponseSpecs.ok())
-                .extract().as(CreateTransferModelResponse.class);
+        anotherUserInfo = createUser();
+        int anotherUserAccount = createAccount(anotherUserInfo);
 
-        softly.assertThat(MIN_TRANSFER_SUM).isEqualTo(response.getAmount());
-        softly.assertThat(receiverAccountId).isEqualTo( response.getReceiverAccountId());
-        softly.assertThat(senderAccountId).isEqualTo(response.getSenderAccountId());
-        softly.assertThat(MSG_TRANSFER_SUCCESS).isEqualTo(response.getMessage());
-        softly.assertThat(STANDART_TRANSFER_SUM).isCloseTo(getAccountBalance(senderAccountInfo),offset(0.001));
-        softly.assertThat(MIN_TRANSFER_SUM).isCloseTo(getAccountBalance(receiverAccountInfo),offset(0.001));
-        deleteUser(receiverAccountInfo);
+        CreateTransferModelResponse response = createTransfer(userInfo, userAccount, MIN_TRANSFER_SUM, anotherUserAccount);
+
+        assertThatTransfer(response, softly).isSuccessful(MIN_TRANSFER_SUM, userAccount, anotherUserAccount);
+
+        softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE - MIN_TRANSFER_SUM, offset(0.001));
+        softly.assertThat(getAccountBalance(anotherUserInfo, anotherUserAccount)).isCloseTo(MIN_TRANSFER_SUM, offset(0.001));
 
     }
 
     @Test
     @DisplayName("Проверка отсутствия возможности перевода на несуществующий аккаунт")
     public void shouldNotAllowTransferToNotExistAccount() {
-        String actualErrorText = createTransfer(senderAccountInfo, MIN_TRANSFER_SUM, ACCOUNT_THAT_NOT_EXIST, ResponseSpecs.badRequest())
-                .extract().asString();
+        String actualErrorText = transferExpectingBadRequest(userInfo, userAccount, MIN_TRANSFER_SUM, ACCOUNT_THAT_NOT_EXIST);
 
-        assertEquals(MSG_INVALID_TRANSFER, actualErrorText);
+        softly.assertThat(actualErrorText).isEqualTo(MSG_INVALID_TRANSFER);
+        softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE, offset(0.001));
     }
 
     @Test
     @DisplayName("Проверка отсутствия возможности перевода со счета на счет если счет один и тот же")
     public void shouldNotAllowTransferIfSenderAndReceiverAccountSame() {
-
-
-        String actualErrorText = createTransfer(senderAccountInfo, MIN_TRANSFER_SUM, senderAccountInfo.getAccountId(), ResponseSpecs.badRequest())
-                .extract().asString();
-
-        assertEquals(MSG_INVALID_TRANSFER, actualErrorText);
+        String actualErrorText = transferExpectingBadRequest(userInfo, userAccount, MIN_TRANSFER_SUM, userAccount);
+        softly.assertThat(actualErrorText).isEqualTo(MSG_INVALID_TRANSFER);
+        softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE, offset(0.001));
 
     }
 
