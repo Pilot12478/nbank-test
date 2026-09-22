@@ -1,6 +1,5 @@
 package steps;
 
-import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.ResponseSpecification;
 import models.CreateTransferModelRequest;
 import models.CreateTransferModelResponse;

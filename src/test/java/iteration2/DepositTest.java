@@ -92,11 +92,7 @@ public class DepositTest extends BaseTest {
         String actualErrorMessage = depositExpectingForbidden(userInfo, INVALID_ACCOUNT, MIN_DEPOSIT_SUM);
         softly.assertThat(actualErrorMessage).isEqualTo(UNAUTHORIZED_ACCESS);
         softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE, offset(0.001));
-
-
     }
-
-
 }
 
 

@@ -11,13 +11,14 @@ import steps.UserInfo;
 import steps.UserNameSteps;
 
 import static steps.UserInfoSteps.getUserAccount;
+import static steps.UserNameSteps.INVALID_NAME_MSG;
 import static steps.UserNameSteps.updateUserName;
+import static utils.Helper.generateName;
 
 public class UserNameTest extends BaseTest {
-    private static final String VALID_USER_NAME = "John Duck";
+    private static final String VALID_USER_NAME = generateName();
     private static final String INVALID_USER_NAME = "John";
     private UserInfo userInfo;
-    private static final String INVALID_NAME_MSG = "Name must contain two words with letters only";
 
 
     @BeforeEach

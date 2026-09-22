@@ -4,7 +4,6 @@ import models.CreateTransferModelResponse;
 import org.assertj.core.api.SoftAssertions;
 
 import static iteration2.TransferTest.MSG_TRANSFER_SUCCESS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
 
 public class TransferAsserts {
