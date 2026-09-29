@@ -14,6 +14,7 @@ import steps.UserInfo;
 
 import java.util.stream.Stream;
 
+import static errors.TransferErrors.*;
 import static iteration2.TransferAsserts.assertThatTransfer;
 import static org.assertj.core.api.Assertions.offset;
 import static steps.AccountSteps.createAccount;
@@ -36,10 +37,6 @@ public class TransferTest extends BaseTest {
     private static final int ACCOUNT_THAT_NOT_EXIST = 34434;
     private static final double INITIAL_BALANCE = MAX_DEPOSIT_SUM * 2;
 
-    private static final String MSG_MIN_AMOUNT = "Transfer amount must be at least 0.01";
-    private static final String MSG_EXCEEDS_LIMIT = "Transfer amount cannot exceed 10000";
-    private static final String MSG_INVALID_TRANSFER = "Invalid transfer: insufficient funds or invalid accounts";
-    public static final String MSG_TRANSFER_SUCCESS = "Transfer successful";
 
 
     @BeforeEach
@@ -68,9 +65,9 @@ public class TransferTest extends BaseTest {
 
     public static Stream<Arguments> testDataForNegativeTestWithInvalidSum() {
         return Stream.of(
-                Arguments.of(ZERO_TRANSFER_SUM, MSG_MIN_AMOUNT),
-                Arguments.of(NEGATIVE_TRANSFER_SUM, MSG_MIN_AMOUNT),
-                Arguments.of(SUM_ABOVE_TRANSFER_LIMIT, MSG_EXCEEDS_LIMIT)
+                Arguments.of(ZERO_TRANSFER_SUM, MIN_AMOUNT),
+                Arguments.of(NEGATIVE_TRANSFER_SUM, MIN_AMOUNT),
+                Arguments.of(SUM_ABOVE_TRANSFER_LIMIT, EXCEEDS_LIMIT)
         );
     }
 
@@ -110,7 +107,7 @@ public class TransferTest extends BaseTest {
         int receiverAccountId = createAccount(userInfo);
         createTransfer(userInfo, userAccount, MAX_TRANSFER_SUM, receiverAccountId);
         String actualErrorText = transferExpectingBadRequest(userInfo, userAccount, MAX_TRANSFER_SUM, receiverAccountId);
-        softly.assertThat(actualErrorText).isEqualTo(MSG_INVALID_TRANSFER);
+        softly.assertThat(actualErrorText).isEqualTo(INVALID_TRANSFER);
         softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE - MAX_TRANSFER_SUM, offset(0.001));
 
     }
@@ -135,7 +132,7 @@ public class TransferTest extends BaseTest {
     public void shouldNotAllowTransferToNotExistAccount() {
         String actualErrorText = transferExpectingBadRequest(userInfo, userAccount, MIN_TRANSFER_SUM, ACCOUNT_THAT_NOT_EXIST);
 
-        softly.assertThat(actualErrorText).isEqualTo(MSG_INVALID_TRANSFER);
+        softly.assertThat(actualErrorText).isEqualTo(INVALID_TRANSFER);
         softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE, offset(0.001));
     }
 
@@ -143,7 +140,7 @@ public class TransferTest extends BaseTest {
     @DisplayName("Проверка отсутствия возможности перевода со счета на счет если счет один и тот же")
     public void shouldNotAllowTransferIfSenderAndReceiverAccountSame() {
         String actualErrorText = transferExpectingBadRequest(userInfo, userAccount, MIN_TRANSFER_SUM, userAccount);
-        softly.assertThat(actualErrorText).isEqualTo(MSG_INVALID_TRANSFER);
+        softly.assertThat(actualErrorText).isEqualTo(INVALID_TRANSFER);
         softly.assertThat(getAccountBalance(userInfo, userAccount)).isCloseTo(INITIAL_BALANCE, offset(0.001));
 
     }

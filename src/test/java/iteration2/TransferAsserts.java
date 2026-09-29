@@ -3,7 +3,7 @@ package iteration2;
 import models.CreateTransferModelResponse;
 import org.assertj.core.api.SoftAssertions;
 
-import static iteration2.TransferTest.MSG_TRANSFER_SUCCESS;
+import static errors.TransferErrors.TRANSFER_SUCCESS;
 import static org.assertj.core.api.Assertions.offset;
 
 public class TransferAsserts {
@@ -25,7 +25,7 @@ public class TransferAsserts {
         softly.assertThat(response.getAmount()).isCloseTo(expectedSum, offset(0.001));
         softly.assertThat(response.getSenderAccountId()).isEqualTo(expectedSenderId);
         softly.assertThat(response.getReceiverAccountId()).isEqualTo(expectedReceiverId);
-        softly.assertThat(response.getMessage()).isEqualTo(MSG_TRANSFER_SUCCESS);
+        softly.assertThat(response.getMessage()).isEqualTo(TRANSFER_SUCCESS);
         return this;
     }
 }

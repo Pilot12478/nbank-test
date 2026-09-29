@@ -15,6 +15,7 @@ import steps.UserInfo;
 
 import java.util.stream.Stream;
 
+import static errors.DepositErrors.*;
 import static org.assertj.core.api.Assertions.offset;
 import static steps.AccountSteps.getAccountBalance;
 import static steps.DepositSteps.*;
@@ -31,7 +32,6 @@ public class DepositTest extends BaseTest {
     private static final int ZERO_SUM = 0;
     private static final int INVALID_ACCOUNT = 666;
     public static final double INITIAL_BALANCE = 0.0;
-    private static final String UNAUTHORIZED_ACCESS = "Unauthorized access to account";
 
     public static Stream<Arguments> testDataForSuccessTest() {
 
@@ -44,9 +44,9 @@ public class DepositTest extends BaseTest {
 
     public static Stream<Arguments> testDataForNegativeTest() {
         return Stream.of(
-                Arguments.of(SUM_ABOVE_MAX_LIMIT, "Deposit amount cannot exceed 5000"),
-                Arguments.of(NEGATIVE_SUM, "Deposit amount must be at least 0.01"),
-                Arguments.of(ZERO_SUM, "Deposit amount must be at least 0.01")
+                Arguments.of(SUM_ABOVE_MAX_LIMIT, EXCEEDS_LIMIT),
+                Arguments.of(NEGATIVE_SUM, MIN_AMOUNT),
+                Arguments.of(ZERO_SUM, MIN_AMOUNT)
 
         );
     }

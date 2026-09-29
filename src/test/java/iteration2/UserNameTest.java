@@ -10,14 +10,15 @@ import steps.AdminSteps;
 import steps.UserInfo;
 import steps.UserNameSteps;
 
+import static errors.UserNameErrors.INVALID_NAME;
 import static steps.UserInfoSteps.getUserAccount;
-import static steps.UserNameSteps.INVALID_NAME_MSG;
 import static steps.UserNameSteps.updateUserName;
+import static utils.Helper.generateInvalidName;
 import static utils.Helper.generateName;
 
 public class UserNameTest extends BaseTest {
     private static final String VALID_USER_NAME = generateName();
-    private static final String INVALID_USER_NAME = "John";
+    private static final String INVALID_USER_NAME = generateInvalidName();
     private UserInfo userInfo;
 
 
@@ -46,7 +47,7 @@ public class UserNameTest extends BaseTest {
     public void negativeChangeNameTest() {
         String actualMessage = UserNameSteps.updateUserNameExpectingBadRequest(userInfo, INVALID_USER_NAME);
         UserModelResponseProfile userProfileResponse = getUserAccount(userInfo);
-        softly.assertThat(actualMessage).isEqualTo(INVALID_NAME_MSG);
+        softly.assertThat(actualMessage).isEqualTo(INVALID_NAME);
         softly.assertThat(userProfileResponse.getName()).isNull();
 
     }

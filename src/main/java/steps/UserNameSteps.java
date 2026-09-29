@@ -11,7 +11,6 @@ import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
 public class UserNameSteps {
-    public static final String INVALID_NAME_MSG = "Name must contain two words with letters only";
     public static UpdateUserNameModelResponse updateUserName(UserInfo userInfo, String name) {
         return new ValidatedCrudRequester<UpdateUserNameModelResponse>(RequestSpecs.userAuthReq(
                 userInfo.getUsername(), userInfo.getPassword()), ResponseSpecs.ok(), Endpoint.USER_NAME)
