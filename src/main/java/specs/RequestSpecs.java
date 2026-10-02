@@ -9,13 +9,15 @@ import io.restassured.specification.RequestSpecification;
 import models.LoginUserModelRequest;
 import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
+import steps.LoginSteps;
+import steps.UserInfo;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class RequestSpecs {
-    private static  Map<String, String> authHeaders = new HashMap<>(Map.of("admin","Basic YWRtaW46YWRtaW4="));
+    private static Map<String, String> authHeaders = new HashMap<>(Map.of("admin", "Basic YWRtaW46YWRtaW4="));
 
     private static RequestSpecBuilder defaultReq() {
         return new RequestSpecBuilder()
@@ -37,21 +39,23 @@ public class RequestSpecs {
                 .build();
     }
 
-    public static RequestSpecification userAuthReq(String username, String password) {
+    public static RequestSpecification userAuthReq(UserInfo userInfo) {
         String auth;
-        if (!authHeaders.containsKey(username)) {
-            auth = new CrudRequester(RequestSpecs.adminAuthReq(), ResponseSpecs.ok(), Endpoint.LOGIN)
-                    .post(LoginUserModelRequest.builder()
-                            .username(username)
-                            .password(password)
-                            .build()).extract()
-                    .header("Authorization");
-            authHeaders.put(username, auth);
-        } else auth = authHeaders.get(username);
+        if (!authHeaders.containsKey(userInfo.getUsername())) {
+            auth = LoginSteps.login(userInfo);
+            authHeaders.put(userInfo.getUsername(), auth);
+        } else auth = authHeaders.get(userInfo.getUsername());
 
 
         return defaultReq()
                 .addHeader("Authorization", auth)
                 .build();
+    }
+
+    public static String getUserToken(UserInfo userInfo) {
+        if (!authHeaders.containsKey(userInfo.getUsername())) {
+            return LoginSteps.login(userInfo);
+        } else return authHeaders.get(userInfo.getUsername());
+
     }
 }

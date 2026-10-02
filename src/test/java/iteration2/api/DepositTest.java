@@ -1,4 +1,4 @@
-package iteration2;
+package iteration2.api;
 
 
 import models.DepositModelResponse;
@@ -19,13 +19,13 @@ import static errors.DepositErrors.*;
 import static org.assertj.core.api.Assertions.offset;
 import static steps.AccountSteps.getAccountBalance;
 import static steps.DepositSteps.*;
+import static utils.constants.BankLimits.MAX_DEPOSIT_SUM;
+import static utils.constants.BankLimits.MIN_DEPOSIT_SUM;
 
 
 public class DepositTest extends BaseTest {
     private UserInfo userInfo;
     private int userAccount;
-    private static final int MAX_DEPOSIT_SUM = 5000;
-    private static final double MIN_DEPOSIT_SUM = 0.01;
     private static final double STANDARD_SUM = 4999.99;
     private static final double SUM_ABOVE_MAX_LIMIT = 5000.01;
     private static final int NEGATIVE_SUM = -400;

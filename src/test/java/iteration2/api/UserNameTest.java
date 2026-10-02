@@ -1,4 +1,4 @@
-package iteration2;
+package iteration2.api;
 
 import models.UpdateUserNameModelResponse;
 import models.UserModelResponseProfile;

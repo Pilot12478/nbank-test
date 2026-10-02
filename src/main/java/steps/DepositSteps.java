@@ -11,7 +11,7 @@ import specs.ResponseSpecs;
 
 public class DepositSteps {
     public static DepositModelResponse depositAccount(UserInfo userInfo, int accId, double sum) {
-        return new ValidatedCrudRequester<DepositModelResponse>(RequestSpecs.userAuthReq(userInfo.getUsername(), userInfo.getPassword()), ResponseSpecs.ok(), Endpoint.DEPOSIT)
+        return new ValidatedCrudRequester<DepositModelResponse>(RequestSpecs.userAuthReq(userInfo), ResponseSpecs.ok(), Endpoint.DEPOSIT)
                 .post(DepositModelRequest
                         .builder()
                         .id(accId)
@@ -23,7 +23,7 @@ public class DepositSteps {
 
     }
     private static String depositAccountWithSpec(UserInfo userInfo, int accId, double sum, ResponseSpecification responseSpecification) {
-        return new CrudRequester(RequestSpecs.userAuthReq(userInfo.getUsername(), userInfo.getPassword()), responseSpecification, Endpoint.DEPOSIT)
+        return new CrudRequester(RequestSpecs.userAuthReq(userInfo), responseSpecification, Endpoint.DEPOSIT)
                 .post(DepositModelRequest
                         .builder()
                         .id(accId)
