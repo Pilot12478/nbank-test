@@ -1,4 +1,4 @@
-package iteration2;
+package iteration2.api;
 
 import models.CreateTransferModelResponse;
 import org.assertj.core.api.SoftAssertions;

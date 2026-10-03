@@ -12,8 +12,7 @@ import specs.ResponseSpecs;
 public class TransferSteps {
     public static CreateTransferModelResponse createTransfer(UserInfo userInfo, int senderAccountId,
                                                              double sum, int receiverAccountId) {
-        return new ValidatedCrudRequester<CreateTransferModelResponse>(RequestSpecs.userAuthReq(userInfo.getUsername(),
-                userInfo.getPassword()), ResponseSpecs.ok(), Endpoint.TRANSFER)
+        return new ValidatedCrudRequester<CreateTransferModelResponse>(RequestSpecs.userAuthReq(userInfo), ResponseSpecs.ok(), Endpoint.TRANSFER)
                 .post(CreateTransferModelRequest
                         .builder()
                         .amount(sum)
@@ -25,8 +24,7 @@ public class TransferSteps {
     private static String createTransferWithSpec(UserInfo userInfo, int senderAccountId,
                                                 double sum, int receiverAccountId,
                                                 ResponseSpecification responseSpecification) {
-        return new CrudRequester(RequestSpecs.userAuthReq(userInfo.getUsername(),
-                userInfo.getPassword()), responseSpecification, Endpoint.TRANSFER)
+        return new CrudRequester(RequestSpecs.userAuthReq(userInfo), responseSpecification, Endpoint.TRANSFER)
                 .post(CreateTransferModelRequest
                         .builder()
                         .amount(sum)
