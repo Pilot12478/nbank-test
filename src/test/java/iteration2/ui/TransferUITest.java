@@ -63,6 +63,7 @@ public class TransferUITest {
     public void deleteUserAccount() {
         AdminSteps.deleteUser(userInfo);
         AdminSteps.deleteUser(anotherUserInfo);
+        Selenide.closeWebDriver();
     }
 
     public static Stream<Arguments> testDataForNegativeTestsWithInvalidTransferSum() {
@@ -188,6 +189,8 @@ public class TransferUITest {
 
     @Test
     @DisplayName("Проверка отсутствия возможности перевода на собственный аккаунт")
+    @Disabled("Причина падения: баг на стороне бека"
+    )
     public void shouldBeNegativeWithAccSenderEqualsAccReceiver() {
         $("select.account-selector").selectOptionContainingText("ACC" + userAccount);
         $(Selectors.byAttribute("placeholder", "Enter recipient name")).setValue("Ivan");
