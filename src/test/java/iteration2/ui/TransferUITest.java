@@ -61,9 +61,9 @@ public class TransferUITest {
 
     @AfterEach
     public void deleteUserAccount() {
+        Selenide.closeWebDriver();
         AdminSteps.deleteUser(userInfo);
         AdminSteps.deleteUser(anotherUserInfo);
-        Selenide.closeWebDriver();
     }
 
     public static Stream<Arguments> testDataForNegativeTestsWithInvalidTransferSum() {
