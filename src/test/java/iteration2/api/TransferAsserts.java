@@ -1,9 +1,9 @@
 package iteration2.api;
 
-import models.CreateTransferModelResponse;
+import api.models.CreateTransferModelResponse;
 import org.assertj.core.api.SoftAssertions;
 
-import static errors.TransferErrors.TRANSFER_SUCCESS;
+import static api.errors.TransferErrors.TRANSFER_SUCCESS;
 import static org.assertj.core.api.Assertions.offset;
 
 public class TransferAsserts {

@@ -1,62 +1,48 @@
 package iteration2.ui;
 
-import com.codeborne.selenide.Configuration;
-import com.codeborne.selenide.Selectors;
+import api.steps.AdminSteps;
+import api.steps.DepositSteps;
+import api.steps.UserInfo;
 import com.codeborne.selenide.Selenide;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.openqa.selenium.Alert;
-import steps.AdminSteps;
-import steps.DepositSteps;
-import steps.UserInfo;
+import ui.pages.BankAlert;
+import ui.pages.TransferPage;
 
-import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.codeborne.selenide.Selenide.*;
+import static api.steps.AccountSteps.createAccount;
+import static api.steps.AccountSteps.getAccountBalance;
+import static api.steps.AdminSteps.createUser;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.RequestSpecs.getUserToken;
-import static steps.AccountSteps.createAccount;
-import static steps.AccountSteps.getAccountBalance;
-import static steps.AdminSteps.createUser;
-import static utils.Helper.calculateActualBalance;
+import static utils.Helper.generateInvalidId;
+import static utils.Helper.generateName;
 import static utils.constants.BankLimits.MIN_AMOUNT_LIMIT;
 
-public class TransferUITest {
-    public UserInfo userInfo;
-    public UserInfo anotherUserInfo;
-    public static int userAccount;
-    public static String VALID_TRANSFER_SUM = "5000.00";
-    public static String OVER_LIMIT_TRANSFER_SUM = "12000.00";
-    public static String INVALID_TRANSFER_SUM = "-2000.00";
-    public static int INVALID_ACCOUNT = 21212;
-    public static double DEPOSIT_SUM = 4000.00;
+public class TransferUITest extends BaseUiTest {
+    private UserInfo userInfo;
+    private UserInfo anotherUserInfo;
+    private String receiverName = generateName();
+    private int senderAccountId;
+    private static final double VALID_TRANSFER_SUM = 5000.00;
+    private static final double INVALID_TRANSFER_SUM = 12000.00;
+    private static final double INCORRECT_TRANSFER_SUM = -2000.00;
+    private static final int INVALID_ACCOUNT = generateInvalidId();
+    private static final double DEPOSIT_SUM = 4000.00;
     private static final double INITIAL_SENDER_BALANCE = DEPOSIT_SUM * 2;
     private static final double INITIAL_RECEIVER_BALANCE = 0;
+    private static final double OVER_BALANCE_SUM = INITIAL_SENDER_BALANCE + MIN_AMOUNT_LIMIT;
 
-    public static String OVER_INITIAl_BALANCE_TRANSFER_SUM = String.valueOf(INITIAL_SENDER_BALANCE + MIN_AMOUNT_LIMIT);
-
-    @BeforeAll
-    public static void setUp() {
-        Configuration.baseUrl = "http://192.168.1.67:3000";
-        Configuration.remote = "http://localhost:4444/wd/hub";
-        Configuration.browser = "chrome";
-        Configuration.browserSize = "1980x1080";
-        Configuration.browserCapabilities.setCapability("selenoid:options", Map.of("enableVNC", true, "enableLog", true));
-    }
 
     @BeforeEach
     public void preconditionSetUp() {
         userInfo = createUser();
-        userAccount = createAccount(userInfo);
-        DepositSteps.depositAccount(userInfo, userAccount, DEPOSIT_SUM);
-        DepositSteps.depositAccount(userInfo, userAccount, DEPOSIT_SUM);
-        String token = getUserToken(userInfo);
-        Selenide.open("/");
-        executeJavaScript("localStorage.setItem('authToken',arguments[0]);", token);
-        Selenide.open("/transfer");
+        senderAccountId = createAccount(userInfo);
+        DepositSteps.depositAccount(userInfo, senderAccountId, DEPOSIT_SUM);
+        DepositSteps.depositAccount(userInfo, senderAccountId, DEPOSIT_SUM);
+        authAsUser(userInfo);
     }
 
     @AfterEach
@@ -68,10 +54,10 @@ public class TransferUITest {
 
     public static Stream<Arguments> testDataForNegativeTestsWithInvalidTransferSum() {
         return Stream.of(
-                Arguments.of(OVER_LIMIT_TRANSFER_SUM, "❌ Error: Transfer amount cannot exceed 10000", "Сумма перевода превышает лимит"),
-                Arguments.of(OVER_INITIAl_BALANCE_TRANSFER_SUM, "❌ Error: Invalid transfer: insufficient funds or invalid accounts",
+                Arguments.of(INVALID_TRANSFER_SUM, BankAlert.OVER_LIMIT_TRANSFER_AMOUNT, "Сумма перевода превышает лимит"),
+                Arguments.of(OVER_BALANCE_SUM, BankAlert.TRANSFER_SUM_OVER_BALANCE,
                         "Сумма перевода больше баланса отправителя"),
-                Arguments.of(INVALID_TRANSFER_SUM, "❌ Error: Transfer amount must be at least 0.01", "Сумма перевода отрицательная")
+                Arguments.of(INCORRECT_TRANSFER_SUM, BankAlert.INVALID_TRANSFER_AMOUNT, "Сумма перевода отрицательная")
         );
     }
 
@@ -79,27 +65,16 @@ public class TransferUITest {
     @DisplayName("Проверка успешного перевода пользователем с максимальным количеством параметров(ME-TO-ME)")
     public void shouldBeSuccessTransferMeToMeTestWithMaxParameters() {
         int receiverAccountId = createAccount(userInfo);
-        $("select.account-selector").selectOptionContainingText("ACC" + userAccount);
-        $(Selectors.byAttribute("placeholder", "Enter recipient name")).setValue("Ivan");
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number")).setValue("ACC" + receiverAccountId);
-        $(Selectors.byAttribute("placeholder", "Enter amount")).setValue(VALID_TRANSFER_SUM);
-        $("#confirmCheck").click();
-        $(Selectors.byTagAndText("button", "\uD83D\uDE80 Send Transfer")).click();
+        new TransferPage()
+                .open()
+                .transfer(receiverName, senderAccountId, receiverAccountId, VALID_TRANSFER_SUM)
+                .checkAlertMessageAndAccept(BankAlert.TRANSFERRED_SUCCESSFULLY, VALID_TRANSFER_SUM, receiverAccountId)
+                .refresh()
+                .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM)
+                .checkAccountBalance(receiverAccountId, VALID_TRANSFER_SUM);
 
-        Alert alert = switchTo().alert();
-        assertThat(alert.getText()).contains("✅ Successfully transferred " + "$" + VALID_TRANSFER_SUM + " to account " + "ACC" + receiverAccountId + "!");
-        alert.accept();
-        Selenide.refresh();
-        double actualSenderBalance = Double.parseDouble(calculateActualBalance(userAccount));
-        double actualReceiverBalance = Double.parseDouble(calculateActualBalance(receiverAccountId));
-        double transferSum = Double.parseDouble(VALID_TRANSFER_SUM);
-
-        assertThat(actualSenderBalance).isEqualTo(INITIAL_SENDER_BALANCE - transferSum);
-        assertThat(actualReceiverBalance).isEqualTo(transferSum);
-
-
-        assertThat(getAccountBalance(userInfo, userAccount)).isEqualTo(INITIAL_SENDER_BALANCE - transferSum);
-        assertThat(getAccountBalance(userInfo, receiverAccountId)).isEqualTo(transferSum);
+        assertThat(getAccountBalance(userInfo, senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM);
+        assertThat(getAccountBalance(userInfo, receiverAccountId)).isEqualTo(VALID_TRANSFER_SUM);
 
 
     }
@@ -109,80 +84,50 @@ public class TransferUITest {
     public void shouldBeSuccessTransferToAnotherUserAccountWithMinParameters() {
         anotherUserInfo = createUser();
         int anotherUserAccount = createAccount(anotherUserInfo);
-        $("select.account-selector").selectOptionContainingText("ACC" + userAccount);
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number")).setValue("ACC" + anotherUserAccount);
-        $(Selectors.byAttribute("placeholder", "Enter amount")).setValue(VALID_TRANSFER_SUM);
-        $("#confirmCheck").click();
-        $(Selectors.byTagAndText("button", "\uD83D\uDE80 Send Transfer")).click();
+        new TransferPage()
+                .open()
+                .transfer(senderAccountId, anotherUserAccount, VALID_TRANSFER_SUM)
+                .checkAlertMessageAndAccept(BankAlert.TRANSFERRED_SUCCESSFULLY, VALID_TRANSFER_SUM, anotherUserAccount)
+                .refresh()
+                .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM);
 
-        Alert alert = switchTo().alert();
-        assertThat(alert.getText()).contains("✅ Successfully transferred " + "$" + VALID_TRANSFER_SUM + " to account " + "ACC" + anotherUserAccount + "!");
-        alert.accept();
-        Selenide.refresh();
-        double actualSenderBalance = Double.parseDouble(calculateActualBalance(userAccount));
-        String token = getUserToken(anotherUserInfo);
-        executeJavaScript("localStorage.setItem('authToken',arguments[0]);", token);
-        Selenide.open("/transfer");
-        double actualReceiverBalance = Double.parseDouble(calculateActualBalance(anotherUserAccount));
-        double transferSum = Double.parseDouble(VALID_TRANSFER_SUM);
-
-        assertThat(actualSenderBalance).isEqualTo(INITIAL_SENDER_BALANCE - transferSum);
-        assertThat(actualReceiverBalance).isEqualTo(transferSum);
-
-
-        assertThat(getAccountBalance(userInfo, userAccount)).isEqualTo(INITIAL_SENDER_BALANCE - transferSum);
-        assertThat(getAccountBalance(anotherUserInfo, anotherUserAccount)).isEqualTo(transferSum);
-
-
+        authAsUser(anotherUserInfo);
+        new TransferPage()
+                .open()
+                .checkAccountBalance(anotherUserAccount, VALID_TRANSFER_SUM);
+        assertThat(getAccountBalance(userInfo, senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM);
+        assertThat(getAccountBalance(anotherUserInfo, anotherUserAccount)).isEqualTo(VALID_TRANSFER_SUM);
     }
+
 
     @ParameterizedTest(name = "{2}")
     @MethodSource("testDataForNegativeTestsWithInvalidTransferSum")
-    public void shouldBeNegativeTransfer(String sum, String errorText, String message) {
+    public void shouldBeNegativeTransfer(double sum, BankAlert bankAlert, String message) {
         int receiverAccountId = createAccount(userInfo);
-        $("select.account-selector").selectOptionContainingText("ACC" + userAccount);
-        $(Selectors.byAttribute("placeholder", "Enter recipient name")).setValue("Ivan");
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number")).setValue("ACC" + receiverAccountId);
-        $(Selectors.byAttribute("placeholder", "Enter amount")).setValue(sum);
-        $("#confirmCheck").click();
-        $(Selectors.byTagAndText("button", "\uD83D\uDE80 Send Transfer")).click();
+        new TransferPage()
+                .open()
+                .transfer(senderAccountId, receiverAccountId, sum)
+                .checkAlertMessageAndAccept(bankAlert)
+                .refresh()
+                .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE)
+                .checkAccountBalance(receiverAccountId, INITIAL_RECEIVER_BALANCE);
 
-        Alert alert = switchTo().alert();
-        assertThat(alert.getText()).contains(errorText);
-        alert.accept();
-        Selenide.refresh();
-        double actualSenderBalance = Double.parseDouble(calculateActualBalance(userAccount));
-        double actualReceiverBalance = Double.parseDouble(calculateActualBalance(receiverAccountId));
-
-        assertThat(actualSenderBalance).isEqualTo(INITIAL_SENDER_BALANCE);
-        assertThat(actualReceiverBalance).isEqualTo(INITIAL_RECEIVER_BALANCE);
-
-
-        assertThat(getAccountBalance(userInfo, userAccount)).isEqualTo(INITIAL_SENDER_BALANCE);
+        assertThat(getAccountBalance(userInfo, senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE);
         assertThat(getAccountBalance(userInfo, receiverAccountId)).isEqualTo(INITIAL_RECEIVER_BALANCE);
-
 
     }
 
     @Test
     @DisplayName("Проверка негативного сценария: указан несуществующий аккаунт в качестве получателя")
     public void shouldBeNegativeWithInvalidAccountReceiver() {
-        $("select.account-selector").selectOptionContainingText("ACC" + userAccount);
-        $(Selectors.byAttribute("placeholder", "Enter recipient name")).setValue("Ivan");
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number")).setValue("ACC" + INVALID_ACCOUNT);
-        $(Selectors.byAttribute("placeholder", "Enter amount")).setValue(VALID_TRANSFER_SUM);
-        $("#confirmCheck").click();
-        $(Selectors.byTagAndText("button", "\uD83D\uDE80 Send Transfer")).click();
+        new TransferPage()
+                .open()
+                .transfer(senderAccountId, INVALID_ACCOUNT, VALID_TRANSFER_SUM)
+                .checkAlertMessageAndAccept(BankAlert.ACCOUNT_NOT_EXIST)
+                .refresh()
+                .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE);
 
-        Alert alert = switchTo().alert();
-        assertThat(alert.getText()).contains("❌ No user found with this account number.");
-        alert.accept();
-        Selenide.refresh();
-        double actualSenderBalance = Double.parseDouble(calculateActualBalance(userAccount));
-
-        assertThat(actualSenderBalance).isEqualTo(INITIAL_SENDER_BALANCE);
-
-        assertThat(getAccountBalance(userInfo, userAccount)).isEqualTo(INITIAL_SENDER_BALANCE);
+        assertThat(getAccountBalance(userInfo, senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE);
 
 
     }
@@ -192,22 +137,14 @@ public class TransferUITest {
     @Disabled("Причина падения: баг на стороне бека"
     )
     public void shouldBeNegativeWithAccSenderEqualsAccReceiver() {
-        $("select.account-selector").selectOptionContainingText("ACC" + userAccount);
-        $(Selectors.byAttribute("placeholder", "Enter recipient name")).setValue("Ivan");
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number")).setValue("ACC" + userAccount);
-        $(Selectors.byAttribute("placeholder", "Enter amount")).setValue(VALID_TRANSFER_SUM);
-        $("#confirmCheck").click();
-        $(Selectors.byTagAndText("button", "\uD83D\uDE80 Send Transfer")).click();
+        new TransferPage()
+                .open()
+                .transfer(senderAccountId, senderAccountId, VALID_TRANSFER_SUM)
+                .checkAlertMessageAndAccept(BankAlert.ACCOUNT_RECEIVER_INVALID)
+                .refresh()
+                .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE);
 
-        Alert alert = switchTo().alert();
-        assertThat(alert.getText()).contains("❌ Error: Invalid transfer: insufficient funds or invalid accounts");
-        alert.accept();
-        Selenide.refresh();
-        double actualSenderBalance = Double.parseDouble(calculateActualBalance(userAccount));
-
-        assertThat(actualSenderBalance).isEqualTo(INITIAL_SENDER_BALANCE);
-
-        assertThat(getAccountBalance(userInfo, userAccount)).isEqualTo(INITIAL_SENDER_BALANCE);
+        assertThat(getAccountBalance(userInfo, senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE);
 
 
     }
