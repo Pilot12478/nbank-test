@@ -1,11 +1,10 @@
 package utils;
 
-import generators.RandomModelGenerator;
-import models.UpdateUserNameModelRequest;
+import api.generators.RandomModelGenerator;
+import api.models.UpdateUserNameModelRequest;
 import org.apache.commons.lang3.RandomStringUtils;
 
-import java.util.Random;
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Helper {
     public static String generateName() {
@@ -15,4 +14,10 @@ public class Helper {
     public static String generateInvalidName() {
         return RandomStringUtils.randomAlphabetic(10);
     }
+
+    public static int generateInvalidId() {
+        return ThreadLocalRandom.current().nextInt(100, Integer.MAX_VALUE);
+    }
+
+
 }
