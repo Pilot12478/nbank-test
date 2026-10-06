@@ -13,7 +13,7 @@ import specs.ResponseSpecs;
 public class UserNameSteps {
     public static UpdateUserNameModelResponse updateUserName(UserInfo userInfo, String name) {
         return new ValidatedCrudRequester<UpdateUserNameModelResponse>(RequestSpecs.userAuthReq(
-                userInfo.getUsername(), userInfo.getPassword()), ResponseSpecs.ok(), Endpoint.USER_NAME)
+               userInfo), ResponseSpecs.ok(), Endpoint.USER_NAME)
                 .update(UpdateUserNameModelRequest
                         .builder()
                         .name(name)
@@ -21,7 +21,7 @@ public class UserNameSteps {
     }
     private static String updateUserNameWithSpec(UserInfo userInfo, String name, ResponseSpecification responseSpecification) {
         return new CrudRequester(RequestSpecs.userAuthReq(
-                userInfo.getUsername(), userInfo.getPassword()), responseSpecification, Endpoint.USER_NAME)
+                userInfo), responseSpecification, Endpoint.USER_NAME)
                 .update(UpdateUserNameModelRequest
                         .builder()
                         .name(name)
