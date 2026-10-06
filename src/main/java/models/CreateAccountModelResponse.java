@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateAccountModelResponse {
+public class CreateAccountModelResponse extends BaseModel {
     private int id;
     private String accountNumber;
     private double balance;

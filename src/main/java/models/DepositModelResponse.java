@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DepositModelResponse {
+public class DepositModelResponse extends BaseModel{
     private long id;
     private String accountNumber;
     private double balance;

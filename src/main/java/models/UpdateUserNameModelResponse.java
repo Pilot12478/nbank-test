@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UpdateUserNameModelResponse {
+public class UpdateUserNameModelResponse extends BaseModel {
 
         private String message;
         private Customer customer;
