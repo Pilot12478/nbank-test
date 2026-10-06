@@ -1,18 +1,18 @@
 package iteration2.api;
 
-import models.UpdateUserNameModelResponse;
-import models.UserModelResponseProfile;
+import api.models.UpdateUserNameModelResponse;
+import api.models.UserModelResponseProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import steps.AdminSteps;
-import steps.UserInfo;
-import steps.UserNameSteps;
+import api.steps.AdminSteps;
+import api.steps.UserInfo;
+import api.steps.UserNameSteps;
 
-import static errors.UserNameErrors.INVALID_NAME;
-import static steps.UserInfoSteps.getUserAccount;
-import static steps.UserNameSteps.updateUserName;
+import static api.errors.UserNameErrors.INVALID_NAME;
+import static api.steps.UserInfoSteps.getUserAccount;
+import static api.steps.UserNameSteps.updateUserName;
 import static utils.Helper.generateInvalidName;
 import static utils.Helper.generateName;
 

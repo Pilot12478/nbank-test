@@ -1,6 +1,6 @@
 package iteration2.api;
 
-import models.CreateTransferModelResponse;
+import api.models.CreateTransferModelResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -8,20 +8,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import steps.AdminSteps;
-import steps.DepositSteps;
-import steps.UserInfo;
+import api.steps.AdminSteps;
+import api.steps.DepositSteps;
+import api.steps.UserInfo;
 
 import java.util.stream.Stream;
 
-import static errors.TransferErrors.*;
+import static api.errors.TransferErrors.*;
 import static iteration2.api.TransferAsserts.assertThatTransfer;
 import static org.assertj.core.api.Assertions.offset;
-import static steps.AccountSteps.createAccount;
-import static steps.AccountSteps.getAccountBalance;
-import static steps.AdminSteps.createUser;
-import static steps.TransferSteps.createTransfer;
-import static steps.TransferSteps.transferExpectingBadRequest;
+import static api.steps.AccountSteps.createAccount;
+import static api.steps.AccountSteps.getAccountBalance;
+import static api.steps.AdminSteps.createUser;
+import static api.steps.TransferSteps.createTransfer;
+import static api.steps.TransferSteps.transferExpectingBadRequest;
 import static utils.constants.BankLimits.*;
 
 public class TransferTest extends BaseTest {
@@ -55,7 +55,7 @@ public class TransferTest extends BaseTest {
     public static Stream<Arguments> testDataForSuccessTest() {
         return Stream.of(
                 Arguments.of(MAX_TRANSFER_SUM, INITIAL_BALANCE - MAX_TRANSFER_SUM, MAX_TRANSFER_SUM),
-                Arguments.of(MIN_AMOUNT_LIMIT, INITIAL_BALANCE - MIN_AMOUNT_LIMIT, MIN_AMOUNT),
+                Arguments.of(MIN_AMOUNT_LIMIT, INITIAL_BALANCE - MIN_AMOUNT_LIMIT, MIN_AMOUNT_LIMIT),
                 Arguments.of(STANDARD_TRANSFER_SUM, INITIAL_BALANCE - STANDARD_TRANSFER_SUM, STANDARD_TRANSFER_SUM)
 
         );

@@ -1,7 +1,7 @@
 package iteration2.api;
 
 
-import models.DepositModelResponse;
+import api.models.DepositModelResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -9,16 +9,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import steps.AccountSteps;
-import steps.AdminSteps;
-import steps.UserInfo;
+import api.steps.AccountSteps;
+import api.steps.AdminSteps;
+import api.steps.UserInfo;
 
 import java.util.stream.Stream;
 
-import static errors.DepositErrors.*;
+import static api.errors.DepositErrors.*;
+import static api.steps.DepositSteps.*;
 import static org.assertj.core.api.Assertions.offset;
-import static steps.AccountSteps.getAccountBalance;
-import static steps.DepositSteps.*;
+import static api.steps.AccountSteps.getAccountBalance;
 import static utils.constants.BankLimits.MAX_DEPOSIT_SUM;
 import static utils.constants.BankLimits.MIN_DEPOSIT_SUM;
 
@@ -31,7 +31,7 @@ public class DepositTest extends BaseTest {
     private static final int NEGATIVE_SUM = -400;
     private static final int ZERO_SUM = 0;
     private static final int INVALID_ACCOUNT = 666;
-    public static final double INITIAL_BALANCE = 0.0;
+    private static final double INITIAL_BALANCE = 0.0;
 
     public static Stream<Arguments> testDataForSuccessTest() {
 
