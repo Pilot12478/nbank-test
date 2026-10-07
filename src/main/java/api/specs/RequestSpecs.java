@@ -55,4 +55,7 @@ public class RequestSpecs {
         } else return authHeaders.get(userInfo.getUsername());
 
     }
+    public static String getAdminToken(){
+        return authHeaders.get("admin");
+    }
 }
