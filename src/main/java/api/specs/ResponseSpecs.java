@@ -6,29 +6,31 @@ import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 
 public class ResponseSpecs {
-    public static ResponseSpecification created(){
+    public static ResponseSpecification created() {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_CREATED)
                 .build();
     }
 
-    public static ResponseSpecification ok(){
+    public static ResponseSpecification ok() {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_OK)
                 .build();
     }
 
-    public static ResponseSpecification badRequest(){
+    public static ResponseSpecification badRequest() {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
                 .build();
     }
-    public static ResponseSpecification forbidden(){
+
+    public static ResponseSpecification forbidden() {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_FORBIDDEN)
                 .build();
     }
-    public static ResponseSpecification noContent(){
+
+    public static ResponseSpecification noContent() {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_NO_CONTENT)
                 .build();
