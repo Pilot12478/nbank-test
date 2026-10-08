@@ -12,10 +12,10 @@ import java.util.Map;
 public class BrowserEnvExtension implements BeforeAllCallback, AfterEachCallback {
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        Configuration.baseUrl = Config.getProperty("baseUIUrl");
-        Configuration.remote = Config.getProperty("remote");
-        Configuration.browser = Config.getProperty("browser");
-        Configuration.browserSize = Config.getProperty("browserSize");
+        Configuration.baseUrl = Config.uiBaseUrl();
+        Configuration.remote = Config.remote();
+        Configuration.browser = Config.browser();
+        Configuration.browserSize = Config.browserSize();
         Configuration.browserCapabilities.setCapability("selenoid:options", Map.of("enableVNC", true, "enableLog", true));
     }
 

@@ -14,7 +14,6 @@ import static api.steps.UserInfoSteps.getUserAccount;
 import static api.steps.UserNameSteps.updateUserName;
 import static utils.Helper.generateInvalidName;
 import static utils.Helper.generateName;
-@UITest
 public class UserNameTest extends BaseTest {
     private static final String VALID_USER_NAME = generateName();
     private static final String INVALID_USER_NAME = generateInvalidName();
