@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static ui.pages.BasePage.authAsUser;
 
 
 public class UserSessionExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
@@ -22,11 +21,11 @@ public class UserSessionExtension implements BeforeEachCallback, AfterEachCallba
     private static final String CREATED = "createdUsers";
 
     public void beforeEach(ExtensionContext context) {
-        UserSession session = findSession(context);
-        if (session == null) return;
+        Optional<SessionSpec> session = findSession(context);
+        if (session.isEmpty()) return;
 
-        TestUser user = createTestUser(context, session.accounts(), session.balance());
-        authAsUser(user.user());
+        TestUser user = createTestUser(context, session.get().accounts(), session.get().balance());
+        onUserCreated(user);
         context.getStore(NS).put("testUser", user);
     }
 
@@ -53,9 +52,15 @@ public class UserSessionExtension implements BeforeEachCallback, AfterEachCallba
         return c.getStore(NS).get("testUser", TestUser.class);
     }
 
-    private UserSession findSession(ExtensionContext context) {
+    protected Optional<SessionSpec> findSession(ExtensionContext context) {
         return AnnotationSupport.findAnnotation(context.getTestMethod(), UserSession.class)
-                .orElse(null);
+                .map(s -> new SessionSpec(s.accounts(), s.balance()));
+    }
+
+    protected void onUserCreated(TestUser user) {
+    }
+
+    protected record SessionSpec(int accounts, double balance) {
     }
 
     @SuppressWarnings("unchecked")

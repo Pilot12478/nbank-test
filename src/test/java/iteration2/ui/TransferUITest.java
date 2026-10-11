@@ -2,7 +2,7 @@ package iteration2.ui;
 
 import common.annotations.ExtraUser;
 import common.annotations.UITest;
-import common.annotations.UserSession;
+import common.annotations.UiSession;
 import common.extensions.TestUser;
 import iteration2.api.BaseTest;
 import org.junit.jupiter.api.Disabled;
@@ -44,7 +44,7 @@ public class TransferUITest extends BaseTest {
     }
 
     @Test
-    @UserSession(accounts = 2, balance = INITIAL_SENDER_BALANCE)
+    @UiSession(accounts = 2, balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка успешного перевода пользователем с максимальным количеством параметров(ME-TO-ME)")
     public void shouldBeSuccessTransferMeToMeTestWithMaxParameters(TestUser user) {
         int senderAccountId = user.accounts().getFirst();
@@ -64,7 +64,7 @@ public class TransferUITest extends BaseTest {
     }
 
     @Test
-    @UserSession(balance = INITIAL_SENDER_BALANCE)
+    @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка успешного перевода пользователем с минимальным количеством параметров на аккаунт другого пользователя")
     public void shouldBeSuccessTransferToAnotherUserAccountWithMinParameters(TestUser sender, @ExtraUser TestUser receiver) {
         int senderAccountId = sender.accounts().getFirst();
@@ -85,7 +85,7 @@ public class TransferUITest extends BaseTest {
 
 
     @ParameterizedTest(name = "{2}")
-    @UserSession(accounts = 2, balance = INITIAL_SENDER_BALANCE)
+    @UiSession(accounts = 2, balance = INITIAL_SENDER_BALANCE)
     @MethodSource("testDataForNegativeTestsWithInvalidTransferSum")
     public void shouldBeNegativeTransfer(double sum, BankAlert bankAlert, String message, TestUser sender) {
         int senderAccountId = sender.accounts().getFirst();
@@ -104,7 +104,7 @@ public class TransferUITest extends BaseTest {
     }
 
     @Test
-    @UserSession(balance = INITIAL_SENDER_BALANCE)
+    @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка негативного сценария: указан несуществующий аккаунт в качестве получателя")
     public void shouldBeNegativeWithInvalidAccountReceiver(TestUser sender) {
         int senderAccountId = sender.accounts().getFirst();
@@ -121,7 +121,7 @@ public class TransferUITest extends BaseTest {
     }
 
     @Test
-    @UserSession(balance = INITIAL_SENDER_BALANCE)
+    @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка отсутствия возможности перевода на собственный аккаунт")
     @Disabled("Причина падения: баг на стороне бека"
     )

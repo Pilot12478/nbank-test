@@ -1,7 +1,7 @@
 package iteration2.ui;
 
 import common.annotations.UITest;
-import common.annotations.UserSession;
+import common.annotations.UiSession;
 import common.extensions.TestUser;
 import iteration2.api.BaseTest;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +33,7 @@ public class DepositUITest extends BaseTest {
     }
 
     @Test
-    @UserSession
+    @UiSession
     @DisplayName("Проверка успешного пополнения баланса")
     public void depositShouldBeSuccessTest(TestUser user) {
         new DepositPage()
@@ -48,7 +48,7 @@ public class DepositUITest extends BaseTest {
 
     @ParameterizedTest(name = "{2}: {0}")
     @MethodSource("testDataForNegativeTest")
-    @UserSession
+    @UiSession
     public void shouldNotAllowDeposit(double sum, BankAlert bankAlert, String message, TestUser user) {
         new DepositPage()
                 .open()

@@ -5,7 +5,7 @@ import api.steps.AdminSteps;
 import api.steps.UserInfo;
 import api.steps.UserInfoSteps;
 import common.annotations.UITest;
-import common.annotations.UserSession;
+import common.annotations.UiSession;
 import common.extensions.TestUser;
 import iteration2.api.BaseTest;
 import org.junit.jupiter.api.*;
@@ -25,7 +25,7 @@ public class UserNameUITest extends BaseTest {
     private static final String DEFAULT_USER_NAME = "Noname";
 
     @Test
-    @UserSession
+    @UiSession
     @DisplayName("Проверка успешного смены имени")
     public void shouldBeSuccessChangeNameTest(TestUser user) {
         new UserProfilePage()
@@ -41,7 +41,7 @@ public class UserNameUITest extends BaseTest {
     }
 
     @Test
-    @UserSession
+    @UiSession
     @DisplayName("Проверка негативного сценария")
     @Disabled("Причина падения: браузер перед загрузкой профиля делает 4 запроса на бекэнд," +
             "после каждой загрузки происходит новый рендеринг, значение имени перетирается" +
