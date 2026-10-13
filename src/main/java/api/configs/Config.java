@@ -24,4 +24,32 @@ public class Config {
         return INSTANCE.properties.getProperty(key);
     }
 
+    public static String adminLogin() {
+        return getProperty("adminLogin");
+    }
+
+    public static String adminPassword() {
+        return getProperty("adminPassword");
+    }
+
+    public static String apiBaseUrl() {
+        return getProperty("server") + getProperty("apiVersion");
+    }
+
+    public static String uiBaseUrl() {
+        return getProperty("baseUIUrl");
+    }
+
+    public static String remote() {
+        return getProperty("remote");
+    }
+
+    public static String browser() {
+        return getProperty("browser");
+    }
+
+    public static String browserSize() {
+        return getProperty("browserSize");
+    }
+
 }

@@ -1,5 +1,6 @@
 package ui.pages;
 
+import api.steps.UserInfo;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.Selenide;
@@ -7,6 +8,7 @@ import com.codeborne.selenide.SelenideElement;
 import lombok.Getter;
 import org.openqa.selenium.Alert;
 
+import static api.specs.RequestSpecs.getUserToken;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +47,13 @@ public abstract class BasePage<T extends BasePage> {
     public T refresh(){
         Selenide.refresh();
         return (T) this;
+    }
+
+    public static void authAsUser(UserInfo userInfo) {
+        String token = getUserToken(userInfo);
+        Selenide.open("/");
+        executeJavaScript("localStorage.setItem('authToken',arguments[0]);", token);
+
     }
 
 
