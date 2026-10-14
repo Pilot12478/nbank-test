@@ -123,8 +123,6 @@ public class TransferUITest extends BaseTest {
     @Test
     @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка отсутствия возможности перевода на собственный аккаунт")
-    @Disabled("Причина падения: баг на стороне бека"
-    )
     public void shouldBeNegativeWithAccSenderEqualsAccReceiver(TestUser sender) {
         int senderAccountId = sender.accounts().getFirst();
         new TransferPage()
