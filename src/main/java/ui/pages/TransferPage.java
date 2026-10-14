@@ -1,5 +1,6 @@
 package ui.pages;
 
+import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
 import lombok.Getter;
@@ -23,7 +24,9 @@ public class TransferPage extends BasePage<TransferPage> {
         this.accountSelector.selectOptionContainingText("ACC" + senderAccountNumber);
         this.recipientAccountNumber.setValue("ACC" + recipientAccountNumber);
         this.amount.setValue(String.valueOf(amount));
+        this.confirmCheckBox.shouldBe(Condition.interactable).shouldBe(Condition.visible);
         this.confirmCheckBox.click();
+        this.transferButton.shouldBe(Condition.interactable).shouldBe(Condition.visible);
         this.transferButton.click();
         return this;
 
