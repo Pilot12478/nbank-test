@@ -3,6 +3,7 @@ package iteration2.api;
 import api.models.UpdateUserNameModelResponse;
 import api.models.UserModelResponseProfile;
 import api.steps.UserNameSteps;
+import common.annotations.ApiVersion;
 import common.annotations.UITest;
 import common.annotations.UserSession;
 import common.extensions.TestUser;
@@ -21,6 +22,7 @@ public class UserNameTest extends BaseTest {
     @Test
     @UserSession
     @DisplayName("Проверка успешной смены имени")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void successChangeNameTest(TestUser user) {
         UpdateUserNameModelResponse userModelResponse = updateUserName(user.user(), VALID_USER_NAME);
         UserModelResponseProfile userProfileResponse = getUserAccount(user.user());
@@ -32,6 +34,7 @@ public class UserNameTest extends BaseTest {
     @Test
     @UserSession
     @DisplayName("Проверка сценария с ошибкой при вводе имени одним словом")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void negativeChangeNameTest(TestUser user) {
         String actualMessage = UserNameSteps.updateUserNameExpectingBadRequest(user.user(), INVALID_USER_NAME);
         UserModelResponseProfile userProfileResponse = getUserAccount(user.user());

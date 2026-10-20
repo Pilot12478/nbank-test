@@ -1,5 +1,6 @@
 package iteration2.ui;
 
+import common.annotations.ApiVersion;
 import common.annotations.UITest;
 import common.annotations.UiSession;
 import common.extensions.TestUser;
@@ -35,6 +36,7 @@ public class DepositUITest extends BaseTest {
     @Test
     @UiSession
     @DisplayName("Проверка успешного пополнения баланса")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void depositShouldBeSuccessTest(TestUser user) {
         new DepositPage()
                 .open()
@@ -49,6 +51,7 @@ public class DepositUITest extends BaseTest {
     @ParameterizedTest(name = "{2}: {0}")
     @MethodSource("testDataForNegativeTest")
     @UiSession
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldNotAllowDeposit(double sum, BankAlert bankAlert, String message, TestUser user) {
         new DepositPage()
                 .open()

@@ -1,0 +1,16 @@
+=== 2026-10-20T21:37:42 | runs=10 ===
+run  1 | 21:38:39 | ok 31 | fail 0 | skipped 0 | 57s
+run  2 | 21:39:34 | ok 31 | fail 0 | skipped 0 | 55s
+run  3 | 21:40:33 | ok 30 | fail 1 | skipped 0 | 59s
+    FAIL iteration2.ui.TransferUITest.shouldBeNegativeWithAccSenderEqualsAccReceiver(TestUser) : Alert not found Screenshot: file:/C:/Users/zakur/IdeaProjects/nbank-test/build/reports/tests/1792518007001.0.png Page source: file:/C:/Users/zakur/IdeaProjects/nbank-test/build/reports/tests/179251800
+run  4 | 21:41:27 | ok 31 | fail 0 | skipped 0 | 55s
+run  5 | 21:42:23 | ok 31 | fail 0 | skipped 0 | 56s
+run  6 | 21:43:49 | ok 30 | fail 1 | skipped 0 | 86s
+    FAIL iteration2.ui.TransferUITest.shouldBeNegativeTransfer(double, BankAlert, String, TestUser)[1] : timeout: Timed out receiving message from renderer: 29.998 (Session info: chrome=120.0.6099.129) Build info: version: '4.48.0', revision: '27f5213 27f5213055e28398a5105b7892b7a3bb2012a6ef' System info
+run  7 | 21:44:45 | ok 31 | fail 0 | skipped 0 | 56s
+run  8 | 21:45:40 | ok 31 | fail 0 | skipped 0 | 55s
+run  9 | 21:46:35 | ok 31 | fail 0 | skipped 0 | 55s
+run 10 | 21:47:30 | ok 31 | fail 0 | skipped 0 | 55s
+=== flaky summary ===
+  1/10  iteration2.ui.TransferUITest.shouldBeNegativeTransfer(double, BankAlert, String, TestUser)[1]
+  1/10  iteration2.ui.TransferUITest.shouldBeNegativeWithAccSenderEqualsAccReceiver(TestUser)

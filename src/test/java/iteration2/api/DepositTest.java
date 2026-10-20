@@ -2,6 +2,7 @@ package iteration2.api;
 
 
 import api.models.DepositModelResponse;
+import common.annotations.ApiVersion;
 import common.annotations.UserSession;
 import common.extensions.TestUser;
 import org.junit.jupiter.api.DisplayName;
@@ -18,8 +19,6 @@ import static api.steps.DepositSteps.*;
 import static org.assertj.core.api.Assertions.offset;
 import static utils.constants.BankLimits.MAX_DEPOSIT_SUM;
 import static utils.constants.BankLimits.MIN_DEPOSIT_SUM;
-
-
 public class DepositTest extends BaseTest {
     private static final double STANDARD_SUM = 4999.99;
     private static final double SUM_ABOVE_MAX_LIMIT = 5000.01;
@@ -50,6 +49,7 @@ public class DepositTest extends BaseTest {
     @UserSession
     @MethodSource("testDataForSuccessTest")
     @DisplayName("Проверка успешного пополнения аккаунта пользователем")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void verifyTopUpSuccess(double sum, double expectedBalance, TestUser user) {
         DepositModelResponse depositModelResponse = depositAccount(user.user(), user.accounts().getFirst(), sum);
         softly.assertThat(depositModelResponse.getBalance()).isCloseTo(expectedBalance, offset(0.001));
@@ -63,6 +63,7 @@ public class DepositTest extends BaseTest {
     @UserSession
     @MethodSource("testDataForNegativeTest")
     @DisplayName("Проверка отсутствия возможности пополнения счета с различными невалидными данными")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldNotAllowDeposit(double sum, String expectedErrorText,TestUser user) {
         String actualErrorMessage = depositExpectingBadRequest(user.user(), user.accounts().getFirst(), sum);
         softly.assertThat(actualErrorMessage).isEqualTo(expectedErrorText);
@@ -74,6 +75,7 @@ public class DepositTest extends BaseTest {
     @Test
     @UserSession
     @DisplayName("Проверка отсутствия возможности пополнить аккаунт пользователя, которого не существует")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldNotAllowDepositAccountThatNotExist(TestUser user) {
         String actualErrorMessage = depositExpectingForbidden(user.user(), INVALID_ACCOUNT, MIN_DEPOSIT_SUM);
         softly.assertThat(actualErrorMessage).isEqualTo(UNAUTHORIZED_ACCESS);

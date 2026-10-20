@@ -1,5 +1,6 @@
 package iteration2.ui;
 
+import common.annotations.ApiVersion;
 import common.annotations.ExtraUser;
 import common.annotations.UITest;
 import common.annotations.UiSession;
@@ -46,6 +47,7 @@ public class TransferUITest extends BaseTest {
     @Test
     @UiSession(accounts = 2, balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка успешного перевода пользователем с максимальным количеством параметров(ME-TO-ME)")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeSuccessTransferMeToMeTestWithMaxParameters(TestUser user) {
         int senderAccountId = user.accounts().getFirst();
         int receiverAccountId = user.accounts().get(1);
@@ -66,6 +68,7 @@ public class TransferUITest extends BaseTest {
     @Test
     @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка успешного перевода пользователем с минимальным количеством параметров на аккаунт другого пользователя")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeSuccessTransferToAnotherUserAccountWithMinParameters(TestUser sender, @ExtraUser TestUser receiver) {
         int senderAccountId = sender.accounts().getFirst();
         int receiverAccountId = receiver.accounts().getFirst();
@@ -87,6 +90,7 @@ public class TransferUITest extends BaseTest {
     @ParameterizedTest(name = "{2}")
     @UiSession(accounts = 2, balance = INITIAL_SENDER_BALANCE)
     @MethodSource("testDataForNegativeTestsWithInvalidTransferSum")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeNegativeTransfer(double sum, BankAlert bankAlert, String message, TestUser sender) {
         int senderAccountId = sender.accounts().getFirst();
         int receiverAccountId = sender.accounts().get(1);
@@ -106,6 +110,7 @@ public class TransferUITest extends BaseTest {
     @Test
     @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка негативного сценария: указан несуществующий аккаунт в качестве получателя")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeNegativeWithInvalidAccountReceiver(TestUser sender) {
         int senderAccountId = sender.accounts().getFirst();
         new TransferPage()
@@ -123,6 +128,7 @@ public class TransferUITest extends BaseTest {
     @Test
     @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка отсутствия возможности перевода на собственный аккаунт")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeNegativeWithAccSenderEqualsAccReceiver(TestUser sender) {
         int senderAccountId = sender.accounts().getFirst();
         new TransferPage()

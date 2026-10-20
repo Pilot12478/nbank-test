@@ -4,6 +4,7 @@ import api.models.UserModelResponseProfile;
 import api.steps.AdminSteps;
 import api.steps.UserInfo;
 import api.steps.UserInfoSteps;
+import common.annotations.ApiVersion;
 import common.annotations.UITest;
 import common.annotations.UiSession;
 import common.extensions.TestUser;
@@ -27,6 +28,7 @@ public class UserNameUITest extends BaseTest {
     @Test
     @UiSession
     @DisplayName("Проверка успешного смены имени")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeSuccessChangeNameTest(TestUser user) {
         new UserProfilePage()
                 .open()
@@ -43,10 +45,7 @@ public class UserNameUITest extends BaseTest {
     @Test
     @UiSession
     @DisplayName("Проверка негативного сценария")
-//    @Disabled("Причина падения: браузер перед загрузкой профиля делает 4 запроса на бекэнд," +
-//            "после каждой загрузки происходит новый рендеринг, значение имени перетирается" +
-//            "выглядит как баг фронта, 4 запроса на бэк это лишнее"
-//    )
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeNegativeChangeNameTest(TestUser user) {
         new UserProfilePage()
                 .open()
