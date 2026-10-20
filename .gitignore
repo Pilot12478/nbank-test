@@ -40,3 +40,6 @@ build/
 
 ### Agent ###
 AGENTS.md
+
+### Test runs ###
+test-runs*/
