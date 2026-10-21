@@ -1,11 +1,14 @@
 package ui.pages;
 
+import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
 import lombok.Getter;
 
 import static com.codeborne.selenide.Condition.interactable;
 import static com.codeborne.selenide.Selenide.$;
+import static common.extensions.Utils.waitTillRequestEnd;
+
 @Getter
 public class UserProfilePage extends BasePage<UserProfilePage> {
     private SelenideElement nameInput = $(Selectors.byAttribute("placeholder", "Enter new name"));
@@ -19,7 +22,10 @@ public class UserProfilePage extends BasePage<UserProfilePage> {
     public UserProfilePage changeName(String name){
         nameInput.shouldBe(interactable).clear();
         nameInput.setValue(name);
+        button.shouldBe(Condition.interactable).shouldBe(Condition.visible);
         button.click();
         return this;
     }
+
+
 }

@@ -43,10 +43,6 @@ public class UserNameUITest extends BaseTest {
     @Test
     @UiSession
     @DisplayName("Проверка негативного сценария")
-    @Disabled("Причина падения: браузер перед загрузкой профиля делает 4 запроса на бекэнд," +
-            "после каждой загрузки происходит новый рендеринг, значение имени перетирается" +
-            "выглядит как баг фронта, 4 запроса на бэк это лишнее"
-    )
     public void shouldBeNegativeChangeNameTest(TestUser user) {
         new UserProfilePage()
                 .open()

@@ -1,7 +1,6 @@
 package utils;
 
 import api.generators.RandomModelGenerator;
-import api.models.CreateUserModelRequest;
 import api.models.UpdateUserNameModelRequest;
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -19,6 +18,8 @@ public class Helper {
     public static int generateInvalidId() {
         return ThreadLocalRandom.current().nextInt(100, Integer.MAX_VALUE);
     }
+
+
 
 
 }

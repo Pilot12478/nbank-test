@@ -1,5 +1,6 @@
 package ui.pages;
 
+import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
@@ -21,6 +22,7 @@ public class DepositPage extends BasePage<DepositPage>{
     public DepositPage deposit(double amount, int accId){
        this.accountSelector.selectOptionContainingText("ACC"+accId);
         this.amount.setValue(String.valueOf(amount));
+        this.button.shouldBe(Condition.interactable);
         this.button.click();
         return this;
     }

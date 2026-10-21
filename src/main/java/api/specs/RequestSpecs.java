@@ -13,11 +13,12 @@ import api.steps.UserInfo;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static api.specs.Headers.AUTHORIZATION;
 
 public class RequestSpecs {
-    private static final Map<String, String> authHeaders = new HashMap<>(Map.of());
+    private static final Map<String, String> authHeaders = new ConcurrentHashMap<>(Map.of());
 
     private static RequestSpecBuilder defaultReq() {
         return new RequestSpecBuilder()
