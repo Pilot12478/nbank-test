@@ -28,31 +28,26 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>6.0.3</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
             <version>6.0.3</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.21.2</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.42</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>3.27.7</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.github.mifmif</groupId>
@@ -63,13 +58,27 @@
             <groupId>com.codeborne</groupId>
             <artifactId>selenide</artifactId>
             <version>7.18.1</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>4.3.0</version>
     </dependency>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>3.21.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>7.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.13</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -86,6 +95,43 @@
                             <version>1.18.42</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <version>3.21.7</version>
+                <executions>
+                    <execution>
+                        <id>jooq-codegen</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- 1. Настройки подключения к вашей локальной PostgreSQL -->
+                    <jdbc>
+                        <driver>org.postgresql.Driver</driver>
+                        <url>jdbc:postgresql://localhost:5432/nbank</url>
+                        <user>postgres</user>
+                        <password>postgres</password>
+                    </jdbc>
+
+                    <!-- 2. Настройки генератора -->
+                    <generator>
+                        <database>
+                            <name>org.jooq.meta.postgres.PostgresDatabase</name>
+                            <inputSchema>public</inputSchema> <!-- Схема, которую сканировать (обычно public) -->
+                        </database>
+                        <target>
+                            <!-- Пакет, в который будут сгенерированы классы -->
+                            <packageName>com.example.jooq.generated</packageName>
+                            <!-- Директория для сгенерированных исходников -->
+                            <directory>target/generated-sources/jooq</directory>
+                        </target>
+                    </generator>
                 </configuration>
             </plugin>
         </plugins>

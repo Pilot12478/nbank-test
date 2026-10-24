@@ -1,6 +1,6 @@
 package api.steps;
 
-import api.models.LoginUserModelRequest;
+import api.models.dto.LoginUserModelRequest;
 import api.skelethon.Endpoint;
 import api.skelethon.requesters.CrudRequester;
 import api.specs.RequestSpecs;

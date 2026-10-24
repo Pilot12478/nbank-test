@@ -1,4 +1,4 @@
-package api.models;
+package api.models.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,10 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-
-public class CreateTransferModelResponse extends BaseModel {
-    private String message;
-    private double amount;
-    private int receiverAccountId;
+public class CreateTransferModelRequest extends BaseModel{
     private int senderAccountId;
+    private int receiverAccountId;
+    private double amount;
 }

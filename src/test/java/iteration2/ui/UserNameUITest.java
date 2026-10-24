@@ -1,22 +1,18 @@
 package iteration2.ui;
 
-import api.models.UserModelResponseProfile;
-import api.steps.AdminSteps;
-import api.steps.UserInfo;
+import api.models.dto.UserModelResponseProfile;
 import api.steps.UserInfoSteps;
 import common.annotations.ApiVersion;
 import common.annotations.UITest;
 import common.annotations.UiSession;
+import common.assertions.CommonSoftAssertions;
 import common.extensions.TestUser;
 import iteration2.api.BaseTest;
 import org.junit.jupiter.api.*;
 import ui.pages.BankAlert;
 import ui.pages.UserProfilePage;
 
-import static api.steps.AdminSteps.createUser;
 import static com.codeborne.selenide.Condition.text;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static utils.Helper.generateInvalidName;
 import static utils.Helper.generateName;
 @UITest
@@ -36,8 +32,8 @@ public class UserNameUITest extends BaseTest {
                 .checkAlertMessageAndAccept(BankAlert.NAME_UPDATES_SUCCESSFULLY)
                 .refresh()
                 .getName().shouldHave(text(VALID_USER_NAME));
-        UserModelResponseProfile responseProfile = UserInfoSteps.getUserAccount(user.user());
-        assertThat(responseProfile.getName()).isEqualTo(VALID_USER_NAME);
+        UserModelResponseProfile responseProfile = UserInfoSteps.getUserAccount(user.credentials());
+        CommonSoftAssertions.assertThat(softly).isEqualTo(responseProfile.getName(), VALID_USER_NAME);
 
 
     }
@@ -53,8 +49,8 @@ public class UserNameUITest extends BaseTest {
                 .checkAlertMessageAndAccept(BankAlert.INVALID_NAME)
                 .refresh()
                 .getName().shouldHave(text(DEFAULT_USER_NAME));
-        UserModelResponseProfile responseProfile = UserInfoSteps.getUserAccount(user.user());
-        assertNull(responseProfile.getName());
+        UserModelResponseProfile responseProfile = UserInfoSteps.getUserAccount(user.credentials());
+        CommonSoftAssertions.assertThat(softly).isNull(responseProfile.getName());
 
 
     }

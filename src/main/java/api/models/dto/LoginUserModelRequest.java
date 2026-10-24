@@ -1,16 +1,15 @@
-package api.models;
+package api.models.dto;
+
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransferInfo {
+@Builder
+public class LoginUserModelRequest extends BaseModel {
     private String username;
     private String password;
-    private int senderAccountId;
-    private int receiverAccountId;
-    private double sum;
-
 }

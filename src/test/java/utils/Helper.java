@@ -1,7 +1,7 @@
 package utils;
 
 import api.generators.RandomModelGenerator;
-import api.models.UpdateUserNameModelRequest;
+import api.models.dto.UpdateUserNameModelRequest;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.concurrent.ThreadLocalRandom;

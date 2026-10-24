@@ -1,4 +1,4 @@
-package api.models;
+package api.models.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

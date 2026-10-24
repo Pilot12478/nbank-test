@@ -1,20 +1,22 @@
-package api.models;
+package db.models;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class Customer {
-    private int id;
+public class CustomerDao {
+    private long id;
     private String username;
     private String password;
     private String name;
     private String role;
-    private List<AccountDto> accounts;
+    private LocalDateTime created_at;
+    private LocalDateTime updated_at;
+
+
+
 }

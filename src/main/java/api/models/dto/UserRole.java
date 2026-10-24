@@ -1,4 +1,4 @@
-package api.models;
+package api.models.dto;
 
 public enum UserRole {
     USER(),

@@ -1,6 +1,6 @@
-package iteration2.api;
+package common.assertions;
 
-import api.models.CreateTransferModelResponse;
+import api.models.dto.CreateTransferModelResponse;
 import org.assertj.core.api.SoftAssertions;
 
 import static api.errors.TransferErrors.TRANSFER_SUCCESS;
@@ -15,7 +15,7 @@ public class TransferAsserts {
         this.softly = softly;
     }
 
-    public static TransferAsserts assertThatTransfer(CreateTransferModelResponse response, SoftAssertions softly) {
+    public static TransferAsserts assertThatTransfer(SoftAssertions softly, CreateTransferModelResponse response) {
         return new TransferAsserts(response, softly);
     }
 

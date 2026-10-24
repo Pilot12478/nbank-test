@@ -31,11 +31,11 @@ public class UserSessionExtension implements BeforeEachCallback, AfterEachCallba
 
     @Override
     public void afterEach(ExtensionContext context) {
-        List<UserInfo> created = context.getStore(NS).get(CREATED, List.class);
-        if (created == null) return;
-        for (UserInfo user : created) {
-            AdminSteps.deleteUser(user);
-        }
+//        List<UserInfo> created = context.getStore(NS).get(CREATED, List.class);
+//        if (created == null) return;
+//        for (UserInfo user : created) {
+//            AdminSteps.deleteUser(user);
+//        }
     }
 
     @Override

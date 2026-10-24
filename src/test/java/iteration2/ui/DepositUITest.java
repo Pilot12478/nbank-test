@@ -3,6 +3,7 @@ package iteration2.ui;
 import common.annotations.ApiVersion;
 import common.annotations.UITest;
 import common.annotations.UiSession;
+import common.assertions.AccountApiAsserts;
 import common.extensions.TestUser;
 import iteration2.api.BaseTest;
 import org.junit.jupiter.api.DisplayName;
@@ -15,9 +16,9 @@ import ui.pages.DepositPage;
 
 import java.util.stream.Stream;
 
-import static api.steps.AccountSteps.getAccountBalance;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
+
 @UITest
 public class DepositUITest extends BaseTest {
     private static double VALID_DEPOSIT_SUM = 5000.00;
@@ -40,10 +41,10 @@ public class DepositUITest extends BaseTest {
     public void depositShouldBeSuccessTest(TestUser user) {
         new DepositPage()
                 .open()
-                .deposit(VALID_DEPOSIT_SUM, user.accounts().getFirst())
-                .checkAlertMessageAndAccept(BankAlert.DEPOSITED_SUCCESSFULLY, VALID_DEPOSIT_SUM, user.accounts().getFirst())
-                .open().checkAccountBalance(user.accounts().getFirst(), VALID_DEPOSIT_SUM);
-        assertThat(getAccountBalance(user.user(), user.accounts().getFirst())).isCloseTo(VALID_DEPOSIT_SUM, offset(0.001));
+                .deposit(VALID_DEPOSIT_SUM, user.accountId())
+                .checkAlertMessageAndAccept(BankAlert.DEPOSITED_SUCCESSFULLY, VALID_DEPOSIT_SUM, user.accountId())
+                .open().checkAccountBalance(user.accountId(), VALID_DEPOSIT_SUM);
+        AccountApiAsserts.assertThatAccount(softly, user).hasBalance(VALID_DEPOSIT_SUM);
 
 
     }
@@ -55,11 +56,11 @@ public class DepositUITest extends BaseTest {
     public void shouldNotAllowDeposit(double sum, BankAlert bankAlert, String message, TestUser user) {
         new DepositPage()
                 .open()
-                .deposit(sum, user.accounts().getFirst())
+                .deposit(sum, user.accountId())
                 .checkAlertMessageAndAccept(bankAlert)
                 .refresh()
-                .checkAccountBalance(user.accounts().getFirst(), INITIAL_BALANCE);
-        assertThat(getAccountBalance(user.user(), user.accounts().getFirst())).isCloseTo(INITIAL_BALANCE, offset(0.001));
+                .checkAccountBalance(user.accountId(), INITIAL_BALANCE);
+        AccountApiAsserts.assertThatAccount(softly, user).hasBalance(INITIAL_BALANCE);
 
 
     }
