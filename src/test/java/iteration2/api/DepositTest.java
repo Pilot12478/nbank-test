@@ -1,8 +1,11 @@
 package iteration2.api;
 
 
-import api.models.DepositModelResponse;
+import api.models.dto.DepositModelResponse;
+import common.annotations.ApiVersion;
 import common.annotations.UserSession;
+import common.assertions.AccountApiAsserts;
+import common.assertions.CommonSoftAssertions;
 import common.extensions.TestUser;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,13 +16,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
 import static api.errors.DepositErrors.*;
-import static api.steps.AccountSteps.getAccountBalance;
+
 import static api.steps.DepositSteps.*;
-import static org.assertj.core.api.Assertions.offset;
 import static utils.constants.BankLimits.MAX_DEPOSIT_SUM;
 import static utils.constants.BankLimits.MIN_DEPOSIT_SUM;
-
-
 public class DepositTest extends BaseTest {
     private static final double STANDARD_SUM = 4999.99;
     private static final double SUM_ABOVE_MAX_LIMIT = 5000.01;
@@ -50,11 +50,11 @@ public class DepositTest extends BaseTest {
     @UserSession
     @MethodSource("testDataForSuccessTest")
     @DisplayName("Проверка успешного пополнения аккаунта пользователем")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void verifyTopUpSuccess(double sum, double expectedBalance, TestUser user) {
-        DepositModelResponse depositModelResponse = depositAccount(user.user(), user.accounts().getFirst(), sum);
-        softly.assertThat(depositModelResponse.getBalance()).isCloseTo(expectedBalance, offset(0.001));
-        softly.assertThat(getAccountBalance(user.user(), user.accounts().getFirst())).isCloseTo(expectedBalance, offset(0.001));
-
+        DepositModelResponse depositModelResponse = depositAccount(user, sum);
+        CommonSoftAssertions.assertThat(softly).isCloseTo(depositModelResponse.getBalance(), expectedBalance);
+        AccountApiAsserts.assertThatAccount(softly, user).hasBalance(expectedBalance);
 
     }
 
@@ -63,10 +63,11 @@ public class DepositTest extends BaseTest {
     @UserSession
     @MethodSource("testDataForNegativeTest")
     @DisplayName("Проверка отсутствия возможности пополнения счета с различными невалидными данными")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldNotAllowDeposit(double sum, String expectedErrorText,TestUser user) {
-        String actualErrorMessage = depositExpectingBadRequest(user.user(), user.accounts().getFirst(), sum);
-        softly.assertThat(actualErrorMessage).isEqualTo(expectedErrorText);
-        softly.assertThat(getAccountBalance(user.user(), user.accounts().getFirst())).isCloseTo(INITIAL_BALANCE, offset(0.001));
+        String actualErrorMessage = depositExpectingBadRequest(user, sum);
+        CommonSoftAssertions.assertThat(softly).isEqualTo(actualErrorMessage, expectedErrorText);
+        AccountApiAsserts.assertThatAccount(softly, user).hasBalance(INITIAL_BALANCE);
 
 
     }
@@ -74,10 +75,11 @@ public class DepositTest extends BaseTest {
     @Test
     @UserSession
     @DisplayName("Проверка отсутствия возможности пополнить аккаунт пользователя, которого не существует")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldNotAllowDepositAccountThatNotExist(TestUser user) {
-        String actualErrorMessage = depositExpectingForbidden(user.user(), INVALID_ACCOUNT, MIN_DEPOSIT_SUM);
-        softly.assertThat(actualErrorMessage).isEqualTo(UNAUTHORIZED_ACCESS);
-        softly.assertThat(getAccountBalance(user.user(), user.accounts().getFirst())).isCloseTo(INITIAL_BALANCE, offset(0.001));
+        String actualErrorMessage = depositExpectingForbidden(user.credentials(), INVALID_ACCOUNT, MIN_DEPOSIT_SUM);
+        CommonSoftAssertions.assertThat(softly).isEqualTo(actualErrorMessage, UNAUTHORIZED_ACCESS);
+        AccountApiAsserts.assertThatAccount(softly, user).hasBalance(INITIAL_BALANCE);
     }
 }
 

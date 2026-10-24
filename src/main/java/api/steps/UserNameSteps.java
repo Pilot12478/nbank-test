@@ -1,8 +1,8 @@
 package api.steps;
 
 import io.restassured.specification.ResponseSpecification;
-import api.models.UpdateUserNameModelRequest;
-import api.models.UpdateUserNameModelResponse;
+import api.models.dto.UpdateUserNameModelRequest;
+import api.models.dto.UpdateUserNameModelResponse;
 import api.skelethon.Endpoint;
 import api.skelethon.requesters.CrudRequester;
 import api.skelethon.requesters.ValidatedCrudRequester;

@@ -17,6 +17,7 @@ public class BrowserEnvExtension implements BeforeAllCallback, AfterEachCallback
         Configuration.browser = Config.browser();
         Configuration.browserSize = Config.browserSize();
         Configuration.browserCapabilities.setCapability("selenoid:options", Map.of("enableVNC", true, "enableLog", true));
+//        Configuration.headless=true;
     }
 
     @Override

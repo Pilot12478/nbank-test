@@ -1,7 +1,6 @@
 package api.specs;
 
 import api.configs.Config;
-import com.google.j2objc.annotations.Property;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
@@ -10,14 +9,14 @@ import io.restassured.specification.RequestSpecification;
 import api.steps.LoginSteps;
 import api.steps.UserInfo;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static api.specs.Headers.AUTHORIZATION;
 
 public class RequestSpecs {
-    private static final Map<String, String> authHeaders = new HashMap<>(Map.of());
+    private static final Map<String, String> authHeaders = new ConcurrentHashMap<>(Map.of());
 
     private static RequestSpecBuilder defaultReq() {
         return new RequestSpecBuilder()

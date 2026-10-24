@@ -1,6 +1,6 @@
 package api.steps;
 
-import api.models.UserModelResponseProfile;
+import api.models.dto.UserModelResponseProfile;
 import api.skelethon.Endpoint;
 import api.skelethon.requesters.ValidatedCrudRequester;
 import api.specs.RequestSpecs;

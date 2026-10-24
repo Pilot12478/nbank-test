@@ -1,9 +1,9 @@
 package api.steps;
 
 import api.generators.RandomModelGenerator;
-import api.models.CreateUserModelRequest;
-import api.models.CreateUserModelResponse;
-import api.models.UserRole;
+import api.models.dto.CreateUserModelRequest;
+import api.models.dto.CreateUserModelResponse;
+import api.models.dto.UserRole;
 import api.skelethon.Endpoint;
 import api.skelethon.requesters.CrudRequester;
 import api.skelethon.requesters.ValidatedCrudRequester;

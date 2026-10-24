@@ -1,0 +1,15 @@
+package api.models.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class LoginUserModelResponse extends BaseModel {
+    private String role;
+    private String userName;
+}

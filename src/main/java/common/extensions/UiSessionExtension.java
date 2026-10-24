@@ -18,6 +18,6 @@ public class UiSessionExtension extends UserSessionExtension {
 
     @Override
     protected void onUserCreated(TestUser user) {
-        authAsUser(user.user());
+        authAsUser(user.credentials());
     }
 }

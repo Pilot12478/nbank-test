@@ -1,7 +1,7 @@
 package api.generators;
 
 import com.mifmif.common.regex.Generex;
-import api.models.BaseModel;
+import api.models.dto.BaseModel;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

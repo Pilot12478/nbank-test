@@ -1,21 +1,18 @@
 package iteration2.ui;
 
-import api.models.UserModelResponseProfile;
-import api.steps.AdminSteps;
-import api.steps.UserInfo;
+import api.models.dto.UserModelResponseProfile;
 import api.steps.UserInfoSteps;
+import common.annotations.ApiVersion;
 import common.annotations.UITest;
 import common.annotations.UiSession;
+import common.assertions.CommonSoftAssertions;
 import common.extensions.TestUser;
 import iteration2.api.BaseTest;
 import org.junit.jupiter.api.*;
 import ui.pages.BankAlert;
 import ui.pages.UserProfilePage;
 
-import static api.steps.AdminSteps.createUser;
 import static com.codeborne.selenide.Condition.text;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static utils.Helper.generateInvalidName;
 import static utils.Helper.generateName;
 @UITest
@@ -27,6 +24,7 @@ public class UserNameUITest extends BaseTest {
     @Test
     @UiSession
     @DisplayName("Проверка успешного смены имени")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeSuccessChangeNameTest(TestUser user) {
         new UserProfilePage()
                 .open()
@@ -34,8 +32,8 @@ public class UserNameUITest extends BaseTest {
                 .checkAlertMessageAndAccept(BankAlert.NAME_UPDATES_SUCCESSFULLY)
                 .refresh()
                 .getName().shouldHave(text(VALID_USER_NAME));
-        UserModelResponseProfile responseProfile = UserInfoSteps.getUserAccount(user.user());
-        assertThat(responseProfile.getName()).isEqualTo(VALID_USER_NAME);
+        UserModelResponseProfile responseProfile = UserInfoSteps.getUserAccount(user.credentials());
+        CommonSoftAssertions.assertThat(softly).isEqualTo(responseProfile.getName(), VALID_USER_NAME);
 
 
     }
@@ -43,10 +41,7 @@ public class UserNameUITest extends BaseTest {
     @Test
     @UiSession
     @DisplayName("Проверка негативного сценария")
-    @Disabled("Причина падения: браузер перед загрузкой профиля делает 4 запроса на бекэнд," +
-            "после каждой загрузки происходит новый рендеринг, значение имени перетирается" +
-            "выглядит как баг фронта, 4 запроса на бэк это лишнее"
-    )
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeNegativeChangeNameTest(TestUser user) {
         new UserProfilePage()
                 .open()
@@ -54,8 +49,8 @@ public class UserNameUITest extends BaseTest {
                 .checkAlertMessageAndAccept(BankAlert.INVALID_NAME)
                 .refresh()
                 .getName().shouldHave(text(DEFAULT_USER_NAME));
-        UserModelResponseProfile responseProfile = UserInfoSteps.getUserAccount(user.user());
-        assertNull(responseProfile.getName());
+        UserModelResponseProfile responseProfile = UserInfoSteps.getUserAccount(user.credentials());
+        CommonSoftAssertions.assertThat(softly).isNull(responseProfile.getName());
 
 
     }
