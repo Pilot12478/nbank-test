@@ -12,6 +12,9 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <nbank_db_url/>
+        <nbank_db_login/>
+        <nbank_db_password/>
     </properties>
     <dependencies>
         <dependency>
@@ -79,6 +82,11 @@
             <artifactId>postgresql</artifactId>
             <version>42.7.13</version>
         </dependency>
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock</artifactId>
+            <version>3.13.2</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -114,9 +122,9 @@
                     <!-- 1. Настройки подключения к вашей локальной PostgreSQL -->
                     <jdbc>
                         <driver>org.postgresql.Driver</driver>
-                        <url>jdbc:postgresql://localhost:5432/nbank</url>
-                        <user>postgres</user>
-                        <password>postgres</password>
+                        <url>${nbank_db_url}</url>
+                        <user>${nbank_db_login}</user>
+                        <password>${nbank_db_password}</password>
                     </jdbc>
 
                     <!-- 2. Настройки генератора -->
@@ -133,6 +141,24 @@
                         </target>
                     </generator>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <files>
+                                <file>${project.basedir}/src/main/resources/config.properties</file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
