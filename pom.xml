@@ -12,9 +12,6 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <nbank_db_url/>
-        <nbank_db_login/>
-        <nbank_db_password/>
     </properties>
     <dependencies>
         <dependency>
@@ -106,43 +103,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.jooq</groupId>
-                <artifactId>jooq-codegen-maven</artifactId>
-                <version>3.21.7</version>
-                <executions>
-                    <execution>
-                        <id>jooq-codegen</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <!-- 1. Настройки подключения к вашей локальной PostgreSQL -->
-                    <jdbc>
-                        <driver>org.postgresql.Driver</driver>
-                        <url>${nbank_db_url}</url>
-                        <user>${nbank_db_login}</user>
-                        <password>${nbank_db_password}</password>
-                    </jdbc>
-
-                    <!-- 2. Настройки генератора -->
-                    <generator>
-                        <database>
-                            <name>org.jooq.meta.postgres.PostgresDatabase</name>
-                            <inputSchema>public</inputSchema> <!-- Схема, которую сканировать (обычно public) -->
-                        </database>
-                        <target>
-                            <!-- Пакет, в который будут сгенерированы классы -->
-                            <packageName>com.example.jooq.generated</packageName>
-                            <!-- Директория для сгенерированных исходников -->
-                            <directory>target/generated-sources/jooq</directory>
-                        </target>
-                    </generator>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>properties-maven-plugin</artifactId>
                 <version>1.2.1</version>
@@ -160,6 +120,67 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-jooq-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.basedir}/src/main/jooq</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>jooq</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-codegen-maven</artifactId>
+                        <version>3.21.7</version>
+                        <executions>
+                            <execution>
+                                <id>jooq-codegen</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <jdbc>
+                                <driver>org.postgresql.Driver</driver>
+                                <url>${nbank_db_url}</url>
+                                <user>${nbank_db_login}</user>
+                                <password>${nbank_db_password}</password>
+                            </jdbc>
+                            <generator>
+                                <database>
+                                    <name>org.jooq.meta.postgres.PostgresDatabase</name>
+                                    <inputSchema>public</inputSchema>
+                                </database>
+                                <target>
+                                    <packageName>com.example.jooq.generated</packageName>
+                                    <directory>src/main/jooq</directory>
+                                </target>
+                            </generator>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
