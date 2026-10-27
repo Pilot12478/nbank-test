@@ -1,6 +1,6 @@
 package api.skelethon;
 
-import api.models.*;
+import api.models.dto.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

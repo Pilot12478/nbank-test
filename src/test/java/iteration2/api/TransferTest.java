@@ -1,8 +1,11 @@
 package iteration2.api;
 
-import api.models.CreateTransferModelResponse;
+import api.models.dto.CreateTransferModelResponse;
+import common.annotations.ApiVersion;
 import common.annotations.ExtraUser;
 import common.annotations.UserSession;
+import common.assertions.AccountApiAsserts;
+import common.assertions.CommonSoftAssertions;
 import common.extensions.TestUser;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,11 +17,9 @@ import java.util.stream.Stream;
 
 import static api.errors.TransferErrors.*;
 import static api.steps.AccountSteps.createAccount;
-import static api.steps.AccountSteps.getAccountBalance;
 import static api.steps.TransferSteps.createTransfer;
 import static api.steps.TransferSteps.transferExpectingBadRequest;
-import static iteration2.api.TransferAsserts.assertThatTransfer;
-import static org.assertj.core.api.Assertions.offset;
+import static common.assertions.TransferAsserts.assertThatTransfer;
 import static utils.constants.BankLimits.*;
 
 public class TransferTest extends BaseTest {
@@ -49,61 +50,59 @@ public class TransferTest extends BaseTest {
 
 
     @ParameterizedTest(name = "{0}")
-    @UserSession(accounts = 2,balance = INITIAL_BALANCE)
+    @UserSession(accounts = 2, balance = INITIAL_BALANCE)
     @MethodSource("testDataForSuccessTest")
     @DisplayName("Проверка успешного перевода денежных средств между своими счетами")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void checkMeToMeSuccessTransfer(double sum, double expectedSenderBalance, double expectedReceiverBalance, TestUser sender) {
-        int senderAccountId = sender.accounts().getFirst();
-        int receiverAccountId = sender.accounts().get(1);
-
-
-        CreateTransferModelResponse response = createTransfer(sender.user(), senderAccountId, sum, receiverAccountId);
-        assertThatTransfer(response, softly).isSuccessful(sum, senderAccountId, receiverAccountId);
-
-        softly.assertThat(getAccountBalance(sender.user(), senderAccountId)).isCloseTo(expectedSenderBalance, offset(0.001));
-        softly.assertThat(getAccountBalance(sender.user(), receiverAccountId)).isCloseTo(expectedReceiverBalance, offset(0.001));
+        int senderAccountId = sender.accountId();
+        int receiverAccountId = sender.accountId(1);
+        CreateTransferModelResponse response = createTransfer(sender, senderAccountId, sum, receiverAccountId);
+        assertThatTransfer(softly, response).isSuccessful(sum, senderAccountId, receiverAccountId);
+        AccountApiAsserts.assertThatAccount(softly, sender, senderAccountId).hasBalance(expectedSenderBalance);
+        AccountApiAsserts.assertThatAccount(softly, sender, receiverAccountId).hasBalance(expectedReceiverBalance);
 
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("testDataForNegativeTestWithInvalidSum")
-    @UserSession(accounts = 2,balance = INITIAL_BALANCE)
+    @UserSession(accounts = 2, balance = INITIAL_BALANCE)
     @DisplayName("Проверка ошибки при переводе при различных невалидных тестовых данных")
-    public void shouldNotAllowTransferTest(double sum, String expectedErrorText,TestUser sender) {
-        int receiverAccountId = createAccount(sender.user());
-        String actualErrorText = transferExpectingBadRequest(sender.user(), sender.accounts().getFirst(), sum, receiverAccountId);
-
-        softly.assertThat(actualErrorText).isEqualTo(expectedErrorText);
-        softly.assertThat(getAccountBalance(sender.user(), sender.accounts().getFirst())).isCloseTo(INITIAL_BALANCE, offset(0.001));
+    @ApiVersion(versionApi = "self-transfer-fix")
+    public void shouldNotAllowTransferTest(double sum, String expectedErrorText, TestUser sender) {
+        int receiverAccountId = createAccount(sender);
+        String actualErrorText = transferExpectingBadRequest(sender, sender.accountId(), sum, receiverAccountId);
+        CommonSoftAssertions.assertThat(softly).isEqualTo(actualErrorText, expectedErrorText);
+        AccountApiAsserts.assertThatAccount(softly, sender).hasBalance(INITIAL_BALANCE);
 
     }
 
     @Test
     @DisplayName("Проверка перевода суммы, которая превышает баланс отправителя")
-    @UserSession(accounts = 2,balance = INITIAL_BALANCE)
+    @UserSession(accounts = 2, balance = INITIAL_BALANCE)
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldNotAllowTransferWhenBalanceHasNotEnoughMoney(TestUser sender) {
-        int senderAccountId = sender.accounts().getFirst();
-        int receiverAccountId = sender.accounts().get(1);
-        createTransfer(sender.user(), senderAccountId, MAX_TRANSFER_SUM, receiverAccountId);
-        String actualErrorText = transferExpectingBadRequest(sender.user(), senderAccountId, MAX_TRANSFER_SUM, receiverAccountId);
-        softly.assertThat(actualErrorText).isEqualTo(INVALID_TRANSFER);
-        softly.assertThat(getAccountBalance(sender.user(), senderAccountId)).isCloseTo(INITIAL_BALANCE - MAX_TRANSFER_SUM, offset(0.001));
+        int senderAccountId = sender.accountId();
+        int receiverAccountId = sender.accountId(1);
+        createTransfer(sender, senderAccountId, MAX_TRANSFER_SUM, receiverAccountId);
+        String actualErrorText = transferExpectingBadRequest(sender, senderAccountId, MAX_TRANSFER_SUM, receiverAccountId);
+        CommonSoftAssertions.assertThat(softly).isEqualTo(actualErrorText, INVALID_TRANSFER);
+        AccountApiAsserts.assertThatAccount(softly, sender, senderAccountId).hasBalance(INITIAL_BALANCE - MAX_TRANSFER_SUM);
 
     }
 
     @Test
     @UserSession(balance = INITIAL_BALANCE)
     @DisplayName("Проверка успешного перевода денежных средств на сторонний аккаунт")
-    public void checkTransferToAlienAccount(TestUser sender,@ExtraUser TestUser receiver) {
-        int senderAccountId = sender.accounts().getFirst();
-        int receiverAccountId = receiver.accounts().getFirst();
+    @ApiVersion(versionApi = "self-transfer-fix")
+    public void checkTransferToAlienAccount(TestUser sender, @ExtraUser TestUser receiver) {
+        int senderAccountId = sender.accountId();
+        int receiverAccountId = receiver.accountId();
+        CreateTransferModelResponse response = createTransfer(sender, senderAccountId, MIN_AMOUNT_LIMIT, receiverAccountId);
+        assertThatTransfer(softly, response).isSuccessful(MIN_AMOUNT_LIMIT, senderAccountId, receiverAccountId);
+        AccountApiAsserts.assertThatAccount(softly, sender, senderAccountId).hasBalance(INITIAL_BALANCE - MIN_AMOUNT_LIMIT);
+        AccountApiAsserts.assertThatAccount(softly, receiver, receiverAccountId).hasBalance(MIN_AMOUNT_LIMIT);
 
-        CreateTransferModelResponse response = createTransfer(sender.user(), senderAccountId, MIN_AMOUNT_LIMIT, receiverAccountId);
-
-        assertThatTransfer(response, softly).isSuccessful(MIN_AMOUNT_LIMIT, senderAccountId, receiverAccountId);
-
-        softly.assertThat(getAccountBalance(sender.user(), senderAccountId)).isCloseTo(INITIAL_BALANCE - MIN_AMOUNT_LIMIT, offset(0.001));
-        softly.assertThat(getAccountBalance(receiver.user(), receiverAccountId)).isCloseTo(MIN_AMOUNT_LIMIT, offset(0.001));
 
     }
 
@@ -111,20 +110,21 @@ public class TransferTest extends BaseTest {
     @Test
     @UserSession(balance = INITIAL_BALANCE)
     @DisplayName("Проверка отсутствия возможности перевода на несуществующий аккаунт")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldNotAllowTransferToNotExistAccount(TestUser sender) {
-        String actualErrorText = transferExpectingBadRequest(sender.user(), sender.accounts().getFirst(), MIN_AMOUNT_LIMIT, ACCOUNT_THAT_NOT_EXIST);
-
-        softly.assertThat(actualErrorText).isEqualTo(INVALID_TRANSFER);
-        softly.assertThat(getAccountBalance(sender.user(), sender.accounts().getFirst())).isCloseTo(INITIAL_BALANCE, offset(0.001));
+        String actualErrorText = transferExpectingBadRequest(sender, sender.accountId(), MIN_AMOUNT_LIMIT, ACCOUNT_THAT_NOT_EXIST);
+        CommonSoftAssertions.assertThat(softly).isEqualTo(actualErrorText, INVALID_TRANSFER);
+        AccountApiAsserts.assertThatAccount(softly, sender).hasBalance(INITIAL_BALANCE);
     }
 
     @Test
     @UserSession(balance = INITIAL_BALANCE)
     @DisplayName("Проверка отсутствия возможности перевода со счета на счет если счет один и тот же")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldNotAllowTransferIfSenderAndReceiverAccountSame(TestUser sender) {
-        String actualErrorText = transferExpectingBadRequest(sender.user(), sender.accounts().getFirst(), MIN_AMOUNT_LIMIT, sender.accounts().getFirst());
-        softly.assertThat(actualErrorText).isEqualTo(INVALID_TRANSFER);
-        softly.assertThat(getAccountBalance(sender.user(), sender.accounts().getFirst())).isCloseTo(INITIAL_BALANCE, offset(0.001));
+        String actualErrorText = transferExpectingBadRequest(sender, sender.accountId(), MIN_AMOUNT_LIMIT, sender.accountId());
+        CommonSoftAssertions.assertThat(softly).isEqualTo(actualErrorText, INVALID_TRANSFER);
+        AccountApiAsserts.assertThatAccount(softly, sender).hasBalance(INITIAL_BALANCE);
 
     }
 

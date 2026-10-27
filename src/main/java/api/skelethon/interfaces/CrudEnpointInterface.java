@@ -1,6 +1,6 @@
 package api.skelethon.interfaces;
 
-import api.models.BaseModel;
+import api.models.dto.BaseModel;
 
 public interface CrudEnpointInterface {
     Object post(BaseModel baseModel);
