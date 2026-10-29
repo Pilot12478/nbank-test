@@ -1,11 +1,12 @@
 package iteration2.ui;
 
+import common.annotations.ApiVersion;
 import common.annotations.ExtraUser;
 import common.annotations.UITest;
 import common.annotations.UiSession;
+import common.assertions.AccountApiAsserts;
 import common.extensions.TestUser;
 import iteration2.api.BaseTest;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,8 +17,6 @@ import ui.pages.TransferPage;
 
 import java.util.stream.Stream;
 
-import static api.steps.AccountSteps.getAccountBalance;
-import static org.assertj.core.api.Assertions.assertThat;
 import static ui.pages.BasePage.authAsUser;
 import static utils.Helper.generateInvalidId;
 import static utils.Helper.generateName;
@@ -46,9 +45,10 @@ public class TransferUITest extends BaseTest {
     @Test
     @UiSession(accounts = 2, balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка успешного перевода пользователем с максимальным количеством параметров(ME-TO-ME)")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeSuccessTransferMeToMeTestWithMaxParameters(TestUser user) {
-        int senderAccountId = user.accounts().getFirst();
-        int receiverAccountId = user.accounts().get(1);
+        int senderAccountId = user.accountId();
+        int receiverAccountId = user.accountId(1);
         new TransferPage()
                 .open()
                 .transfer(receiverName, senderAccountId, receiverAccountId, VALID_TRANSFER_SUM)
@@ -57,8 +57,8 @@ public class TransferUITest extends BaseTest {
                 .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM)
                 .checkAccountBalance(receiverAccountId, VALID_TRANSFER_SUM);
 
-        assertThat(getAccountBalance(user.user(), senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM);
-        assertThat(getAccountBalance(user.user(), receiverAccountId)).isEqualTo(VALID_TRANSFER_SUM);
+        AccountApiAsserts.assertThatAccount(softly, user, senderAccountId).hasBalance(INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM);
+        AccountApiAsserts.assertThatAccount(softly, user, receiverAccountId).hasBalance(VALID_TRANSFER_SUM);
 
 
     }
@@ -66,30 +66,32 @@ public class TransferUITest extends BaseTest {
     @Test
     @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка успешного перевода пользователем с минимальным количеством параметров на аккаунт другого пользователя")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeSuccessTransferToAnotherUserAccountWithMinParameters(TestUser sender, @ExtraUser TestUser receiver) {
-        int senderAccountId = sender.accounts().getFirst();
-        int receiverAccountId = receiver.accounts().getFirst();
+        int senderAccountId = sender.accountId();
+        int receiverAccountId = receiver.accountId();
         new TransferPage()
                 .open()
                 .transfer(senderAccountId, receiverAccountId, VALID_TRANSFER_SUM)
                 .checkAlertMessageAndAccept(BankAlert.TRANSFERRED_SUCCESSFULLY, VALID_TRANSFER_SUM, receiverAccountId)
                 .refresh()
                 .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM);
-        authAsUser(receiver.user());
+        authAsUser(receiver.credentials());
         new TransferPage()
                 .open()
                 .checkAccountBalance(receiverAccountId, VALID_TRANSFER_SUM);
-        assertThat(getAccountBalance(sender.user(), senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM);
-        assertThat(getAccountBalance(receiver.user(), receiverAccountId)).isEqualTo(VALID_TRANSFER_SUM);
+        AccountApiAsserts.assertThatAccount(softly, sender, senderAccountId).hasBalance(INITIAL_SENDER_BALANCE - VALID_TRANSFER_SUM);
+        AccountApiAsserts.assertThatAccount(softly, receiver, receiverAccountId).hasBalance(VALID_TRANSFER_SUM);
     }
 
 
     @ParameterizedTest(name = "{2}")
     @UiSession(accounts = 2, balance = INITIAL_SENDER_BALANCE)
     @MethodSource("testDataForNegativeTestsWithInvalidTransferSum")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeNegativeTransfer(double sum, BankAlert bankAlert, String message, TestUser sender) {
-        int senderAccountId = sender.accounts().getFirst();
-        int receiverAccountId = sender.accounts().get(1);
+        int senderAccountId = sender.accountId();
+        int receiverAccountId = sender.accountId(1);
         new TransferPage()
                 .open()
                 .transfer(senderAccountId, receiverAccountId, sum)
@@ -98,16 +100,17 @@ public class TransferUITest extends BaseTest {
                 .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE)
                 .checkAccountBalance(receiverAccountId, INITIAL_RECEIVER_BALANCE);
 
-        assertThat(getAccountBalance(sender.user(), senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE);
-        assertThat(getAccountBalance(sender.user(), receiverAccountId)).isEqualTo(INITIAL_RECEIVER_BALANCE);
+        AccountApiAsserts.assertThatAccount(softly, sender, senderAccountId).hasBalance(INITIAL_SENDER_BALANCE);
+        AccountApiAsserts.assertThatAccount(softly, sender, receiverAccountId).hasBalance(INITIAL_RECEIVER_BALANCE);
 
     }
 
     @Test
     @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка негативного сценария: указан несуществующий аккаунт в качестве получателя")
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeNegativeWithInvalidAccountReceiver(TestUser sender) {
-        int senderAccountId = sender.accounts().getFirst();
+        int senderAccountId = sender.accountId();
         new TransferPage()
                 .open()
                 .transfer(senderAccountId, INVALID_ACCOUNT, VALID_TRANSFER_SUM)
@@ -115,7 +118,7 @@ public class TransferUITest extends BaseTest {
                 .refresh()
                 .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE);
 
-        assertThat(getAccountBalance(sender.user(), senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE);
+        AccountApiAsserts.assertThatAccount(softly, sender, senderAccountId).hasBalance(INITIAL_SENDER_BALANCE);
 
 
     }
@@ -123,10 +126,9 @@ public class TransferUITest extends BaseTest {
     @Test
     @UiSession(balance = INITIAL_SENDER_BALANCE)
     @DisplayName("Проверка отсутствия возможности перевода на собственный аккаунт")
-    @Disabled("Причина падения: баг на стороне бека"
-    )
+    @ApiVersion(versionApi = "self-transfer-fix")
     public void shouldBeNegativeWithAccSenderEqualsAccReceiver(TestUser sender) {
-        int senderAccountId = sender.accounts().getFirst();
+        int senderAccountId = sender.accountId();
         new TransferPage()
                 .open()
                 .transfer(senderAccountId, senderAccountId, VALID_TRANSFER_SUM)
@@ -134,7 +136,7 @@ public class TransferUITest extends BaseTest {
                 .refresh()
                 .checkAccountBalance(senderAccountId, INITIAL_SENDER_BALANCE);
 
-        assertThat(getAccountBalance(sender.user(), senderAccountId)).isEqualTo(INITIAL_SENDER_BALANCE);
+        AccountApiAsserts.assertThatAccount(softly, sender, senderAccountId).hasBalance(INITIAL_SENDER_BALANCE);
 
 
     }

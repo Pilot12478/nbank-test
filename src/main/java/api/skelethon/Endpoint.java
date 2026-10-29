@@ -1,6 +1,6 @@
 package api.skelethon;
 
-import api.models.*;
+import api.models.dto.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -35,7 +35,11 @@ public enum Endpoint {
     DELETE_PROFILE("/admin/users/{id}",
             BaseModel.class,
             BaseModel.class
-    );
+    ),
+    TRANSFER_FRAUD_CHECK("/accounts/transfer-with-fraud-check",
+            CreateTransferModelRequest.class,
+            CreateTransferFraudCheckModelResponse.class)
+    ;
 
     private final String url;
     private final Class<? extends BaseModel> requestModel;

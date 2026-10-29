@@ -1,15 +1,26 @@
 package api.steps;
 
 import io.restassured.specification.ResponseSpecification;
-import api.models.CreateTransferModelRequest;
-import api.models.CreateTransferModelResponse;
+import api.models.dto.CreateTransferModelRequest;
+import api.models.dto.CreateTransferModelResponse;
 import api.skelethon.Endpoint;
 import api.skelethon.requesters.CrudRequester;
 import api.skelethon.requesters.ValidatedCrudRequester;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
+import common.extensions.TestUser;
 
 public class TransferSteps {
+    public static CreateTransferModelResponse createTransfer(TestUser sender, int senderAccountId,
+                                                             double sum, int receiverAccountId) {
+        return createTransfer(sender.credentials(), senderAccountId, sum, receiverAccountId);
+    }
+
+    public static String transferExpectingBadRequest(TestUser sender, int senderAccountId,
+                                                     double sum, int receiverAccountId) {
+        return transferExpectingBadRequest(sender.credentials(), senderAccountId, sum, receiverAccountId);
+    }
+
     public static CreateTransferModelResponse createTransfer(UserInfo userInfo, int senderAccountId,
                                                              double sum, int receiverAccountId) {
         return new ValidatedCrudRequester<CreateTransferModelResponse>(RequestSpecs.userAuthReq(userInfo), ResponseSpecs.ok(), Endpoint.TRANSFER)

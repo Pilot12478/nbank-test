@@ -52,4 +52,9 @@ public class Config {
         return getProperty("browserSize");
     }
 
+    public static String versionApi() {
+        return getProperty("versionApi");
+    }
+
+
 }
